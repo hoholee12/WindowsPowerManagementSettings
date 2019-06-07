@@ -1,0 +1,103 @@
+MF840KH/A WinAPM settings
+
+i5-5257u CPU
+
+32p 0.8Ghz - base
+43p 0.9Ghz - base
+50p 1.2Ghz - turboboost - 1900mhz
+58p 1.4Ghz - turboboost - 1700mhz
+65p 1.6Ghz - turboboost - 1500mhz <<
+73p 1.8Ghz - turboboost - 1300mhz
+84p 2.0Ghz - turboboost - 1100mhz
+95p 2.3Ghz - turboboost - 800mhz
+98p 2.6Ghz - turboboost - 500mhz <<<
+99p 2.7Ghz - turboboost - 400mhz
+100p 3.1Ghz - turboboost <<<<
+
+Iris6100 GPU
+
+450mhz - base
+900mhz - invisible limit(actual max speed)
+1050mhz - max speed(impossible to game in this speed in real world anyway)
+
+Maximum Battery Life - forces base 450mhz
+Balanced - only drops when not much is used
+Maximum Performance - always tries to reach maximum target speed
+
+
+create dozens of powerplans for each programs, and easily switch by using some automation tools like process lasso.
+
+for macbooks, use MacsFanControl for windows. set sensor-based value to CPU Core 0(or 1 on newer versions), the most responsive sensor(most responsive sensors are vital for preventing thermal throttling).
+(lubbos fan control works well too, only that gpu temperature reading doesnt work....)
+
+starting some idle programs like chrome browser may burst up the cpu clock and in turn burst up fan speed(will make you wet pants). you dont want that. edit the existing idle powerplan you're using to lower the cpu clock. and create other powerplans for programs that really need cpu power.
+
+below are my detailed settings: vvvvv
+
+use in windows task scheduler custom event===================
+intel xtu doesnt save all settings, its better to launch xtucli at boot manually
+
+event trigger - log: System - Power-Troubleshooter - event id: 1 	(reapply after wake)
+event trigger - log: System - Winlogon - event id: 7001				(apply on logon)
+
+event trigger - log: System - UserModePowerService - event id: 12	(reapply every powerplan changes)
+
+owner should be your account name(then set run whether logged in or not, and check do not store password if it lets you)
+disable everything in conditions tab
+check run in highest privilege
+
+unfortunately, task scheduler has a BUG where 'ac power must be on' condition cannot be changed when 'set run whether loggeed in or not'.
+==================================================================
+
+
+xtucli============================================================
+use gpu.sh to do specific controls like changing gpu clockspeed automatically
+==================================================================
+
+macsfancontrol settings===========================================
+fan settings: 55c ~ 85c cpu core 1
+==================================================================
+
+my current powerplans=============================================
+use ProcessorPowerSettingsCompact.reg
+processor performance max/min core parking = 100
+processor performance increase/decrease threshold = 30/10
+processor performance increase/decrease policy = rocket/once
+processor performance timecheck interval = 15ms
+processor performance boost policy = 100
+('Performance' powerplan default)
+'Performance' has the default settings that also allows DC, base ALL custom powerplan to 'Performance' for this feature!!
+
+profilename	throttlemax	iGPUstate
+---------------------------------------
+
+custom:
+encoding		100p(3.1ghz)		Maximum Battery Life(450mhz max)
+Performance		98p(2.6ghz) 		Balanced(550mhz max)		<-- userpowermode sometimes doesnt respond
+maxpower		98p(2.6ghz)			Balanced(550mhz max)		<-- so create another one
+Balanced		65p(1.6ghz)			Balanced(750mhz max)		<-- userpowermode sometimes doesnt respond
+throttle		65p(1.6ghz)			Balanced(750mhz max)		<-- so create another one
+==================================================================
+
+
+misc==============================================================
+set custom resolution using intel graphics panel!
+set vsync driver on using intel graphics panel(do not force anistropy, green dot artifacts on graphics)
+set 30fps limit on games using rivatuner statistics server!
+
+my game settings:
+
+some games have problematic vsync. disable it and use rivatuner to manually limit fps
+
+tips for reducing gta5 cpu usage: decrease maxlodscale to negative value, along with ped and vehicle lod bias(-0.300000)
+tips for dirt rally: global settings lowest, shader settings high, set tree/track lod=0.3, shadow size=128
+tips for fallout 4: edit prefs xml file to set custom res, and 'readonly' it
+
+some games require 2x msaa for several effects. use it with lowest resolution you can get(800x450 or 856x480)
+
+to protect battery:
+low battery percentage: 30%
+critical battery percentage: 15%
+reserve battery percentage: 20%
+
+use batteryNotifyAt80.vbs for overcharging alerts

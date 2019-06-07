@@ -1,0 +1,31 @@
+reference:
+FanControl.ini -> CPUkey = ?
+
+TC0P -> CPU proximity
+TC0C, TC1C, TC2C, TC3C, ... -> CPU cores
+
+i use TC0C that is equivalent to cpu core 0 in macsfancontrol
+
+my settings:
+[Setting]
+nvidiaGPU=0
+integratedGPU=1
+lowerTempThreshold=55.000000
+upperTempThreshold=85.000000
+leftFanBaseRPM=1200
+rightFanBaseRPM=1200
+leftFanMaxRPM=6200
+rightFanMaxRPM=6200
+sensorControlMode=1
+model=2
+numberOfFans=1
+CPUkey=TC0C
+GPUkey=TG0P #fuck da gpu sensor
+celsius=1
+expertMode=1
+linkFansSettings=1
+
+
+To start minimized automatically, just put a shortcut in startup folder 
+(C: \ ProgramData \ Microsoft \ Windows \ Start Menu \ Programs \ StartUp) 
+and the properties of the shortcut in "execute" choose "Minimized"
