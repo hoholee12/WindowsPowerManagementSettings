@@ -19,6 +19,7 @@ $special_programs = @{
 	'dolphin' = 1
 	'tesv' = 1
 	'fsx' = 1
+	'ffmpeg' = 2
 }
 
 # find your own handmade powerplans here:
