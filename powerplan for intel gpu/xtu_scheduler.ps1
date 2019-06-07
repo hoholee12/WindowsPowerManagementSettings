@@ -10,7 +10,7 @@
 # throttle[0], maxpower[1], encoding[2]
 # your program = powerplan
 $special_programs = @{
-	'dirt' = 0
+	'drt' = 0
 	'dirtrally2' = 0
 	'acad' = 1
 	'cl' = 2
