@@ -66,7 +66,12 @@ processor performance increase/decrease policy = rocket/once
 processor performance timecheck interval = 15ms
 processor performance boost policy = 100
 ('Performance' powerplan default)
-'Performance' has the default settings that also allows DC, base ALL custom powerplan to 'Performance' for this feature!!
+
+'Performance' has the default settings that also allows task manager to read event on battery,
+but im too lazy to find out which setting(theres a fuck load of settings apart from these 5),
+
+do urself a favor and use the brand new 'xtu_scheduler.ps1'(read the comments inside the script as well)
+
 
 profilename	throttlemax	iGPUstate
 ---------------------------------------
