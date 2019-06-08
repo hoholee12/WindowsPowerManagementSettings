@@ -84,7 +84,7 @@ while ($True)
 			$load = $cpu['LoadPercentage']
 			$clock = $cpu['CurrentClockSpeed']
 			#if throttling has kicked in('Balanced' clockspeed must be set lower than 'Performance')
-			if($clock -le $max){
+			if($clock -lt $max){
 				powercfg - setactive '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'		#'Performance'
 				xtucli -t -id 59 -v $xtu_max
 			}
