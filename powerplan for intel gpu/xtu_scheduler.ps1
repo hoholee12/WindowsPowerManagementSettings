@@ -49,7 +49,7 @@ $loop_delay = 5		#seconds
 
 #Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
+$loop_delay_backup = $loop_delay
 
 # initial powerplan 'Balanced'
 powercfg -setactive '381b4222-f694-41f0-9685-ff5bb260df2e'		#'Balanced'
@@ -77,21 +77,22 @@ while ($True)
 	$current = powercfg -getactivescheme
 	if ($special_programs_running -eq $True)
 	{
+		$cpu = Get-WmiObject -class Win32_Processor
+		$load = $cpu['LoadPercentage']
+		$clock = $cpu['CurrentClockSpeed']
+		#if throttling has kicked in('Balanced' clockspeed must be set lower than 'Performance')
+		if($clock -lt $max){
+			powercfg - setactive '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'		#'Performance'
+			xtucli -t -id 59 -v $xtu_max
+			$loop_delay = 0		#loop immediately
+		}
+
 		#change power plan
-		if ($current -match $programs_running_cfg_guid[$special_programs[$key]] -eq $False)
+		elseif ($current -match $programs_running_cfg_guid[$special_programs[$key]] -eq $False)
 		{
-			$cpu = Get-WmiObject -class Win32_Processor
-			$load = $cpu['LoadPercentage']
-			$clock = $cpu['CurrentClockSpeed']
-			#if throttling has kicked in('Balanced' clockspeed must be set lower than 'Performance')
-			if($clock -lt $max){
-				powercfg - setactive '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'		#'Performance'
-				xtucli -t -id 59 -v $xtu_max
-			}
-			else{
-				powercfg -setactive $programs_running_cfg_guid[$special_programs[$key]]
-				xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
-			}
+			powercfg -setactive $programs_running_cfg_guid[$special_programs[$key]]
+			xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
+			$loop_delay = $loop_delay_backup
 		}
 	}
 	else
@@ -101,6 +102,7 @@ while ($True)
 		{
 			powercfg -setactive '381b4222-f694-41f0-9685-ff5bb260df2e'		#'Balanced'
 			xtucli -t -id 59 -v $xtu_init
+			$loop_delay = $loop_delay_backup
 		}
 
 	}
