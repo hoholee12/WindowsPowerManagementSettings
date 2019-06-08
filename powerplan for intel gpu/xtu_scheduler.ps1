@@ -9,7 +9,9 @@
 #install intel xtu
 #read cpu clock.txt and set up everything prior to using this script
 
-#create new 
+#config files for adding special_programs, programs_running_cfg_guid, programs_running_cfg_xtu
+#is in c:\xtu_scheduler_config\ for realtime editing!
+#reference inside config area below vvvv
 
 #Config Area Herevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
