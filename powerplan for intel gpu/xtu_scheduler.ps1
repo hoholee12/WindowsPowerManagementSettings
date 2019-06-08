@@ -18,6 +18,7 @@ $special_programs = @{
 	'dirtrally2' = 0
 	'acad' = 1
 	'cl' = 2
+	'link' = 2
 	'pcsx2' = 1
 	'launcher' = 1
 	'dolphin' = 1
