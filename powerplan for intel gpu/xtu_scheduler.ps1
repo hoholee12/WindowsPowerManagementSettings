@@ -9,46 +9,97 @@
 #install intel xtu
 #read cpu clock.txt and set up everything prior to using this script
 
+#create new 
+
 #Config Area Herevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-# throttle[0], maxpower[1], encoding[2]
-# your program = powerplan
-$special_programs = @{
-	'drt' = 0
-	'dirtrally2' = 0
-	'acad' = 1
-	'cl' = 2
-	'link' = 2
-	'pcsx2' = 1
-	'launcher' = 1
-	'dolphin' = 1
-	'tesv' = 1
-	'fsx' = 1
-	'ffmpeg' = 2
-}
+# your program = index
+$special_programs = @{}
 
 # find your own handmade powerplans here:
 #  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes
-$programs_running_cfg_guid = @{
-	0 = 'c59be9f8-02d3-4004-b5ab-5eb15fe519da'		#throttle
-	1 = '7a3436f1-c379-4f06-947e-fbb2755da1c0'		#maxpower
-	2 = '7266deb3-176a-42f4-a910-f007de07a23b'		#encoding
-}
+# index = powerplan
+$programs_running_cfg_guid = @{}
 
-$programs_running_cfg_xtu = @{
-	0 = 7.5		#750mhz
-	1 = 5.5		#550mhz
-	2 = 4.5		#450mhz
-}
+# index = gpu setting
+$programs_running_cfg_xtu = @{}
 
-# initial xtu setting
+# initial gpu setting
 $xtu_init = 7.5		#750mhz		your 'Balanced' gpu setting
 $xtu_max = 10.5		#1050mhz	top speed (even 50mhz off the ogspeed and you will be frying your cpu)
 
+$cpu_increase_threshold = 30		#percentage. your real threshold set in powerplan
 
 $loop_delay = 5		#seconds
 
 #Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# create config files if not exist
+function checkFiles ([string]$setting_string, [string]$value_string){
+	if((Test-Path ("c:\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
+		New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory"
+		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt") -ItemType "file" -value $value_string
+	}
+}
+
+checkFiles "programs_running_cfg_guid" "0 = 'c59be9f8-02d3-4004-b5ab-5eb15fe519da'
+1 = '7a3436f1-c379-4f06-947e-fbb2755da1c0'
+2 = '7266deb3-176a-42f4-a910-f007de07a23b'"
+
+checkFiles "programs_running_cfg_xtu" "0 = 7.5
+1 = 5.5
+2 = 4.5"
+
+checkFiles "special_programs" "'drt' = 0
+'dirtrally2' = 0
+'acad' = 1
+'cl' = 2
+'link' = 2
+'pcsx2' = 1
+'launcher' = 1
+'dolphin' = 1
+'tesv' = 1
+'fsx' = 1
+'ffmpeg' = 2"
+
+
+# used for checking whether settings file was modified
+$global:lastModifiedDate = @{}
+$global:found_hash = @{}		#copy $found_hash after calling findFiles
+$global:isDateDifferent = $False	#flag for findFiles
+
+# find settings file
+function findFiles ($setting_string){
+	$file = Get-Content ("c:\xtu_scheduler_config\" + $setting_string + ".txt")
+	$global:lastModifiedDate.add($setting_string, (Get-Item ("c:\xtu_scheduler_config\" + $setting_string + ".txt")).LastWriteTime)
+	if ($? -eq $True)
+	{
+		$global:found_hash = @{}
+		foreach ($line in $file)
+		{
+			$global:found_hash.add($line.split("=")[0].trim("'", " "), $line.split("=")[1].trim("'", " "))
+		}
+	}
+}
+
+function checkSettings ($setting_string){
+	$currentModifiedDate = (Get-Item ("c:\xtu_scheduler_config\" + $setting_string + ".txt")).LastWriteTime
+	if($global:lastModifiedDate[$setting_string] -ne $currentModifiedDate){
+		$global:isDateDifferent = $True
+		$global:lastModifiedDate.Remove($setting_string)
+		findFiles $setting_string
+	}
+	else{
+		$global:isDateDifferent = $False
+	}
+}
+
+findFiles "programs_running_cfg_guid"
+if ($global:found_hash.Count -ne 0){ $programs_running_cfg_guid = $global:found_hash}
+findFiles "programs_running_cfg_xtu"
+if ($global:found_hash.Count -ne 0){ $programs_running_cfg_xtu = $global:found_hash}
+findFiles "special_programs"
+if ($global:found_hash.Count -ne 0){ $special_programs = $global:found_hash}
 
 $loop_delay_backup = $loop_delay
 
@@ -63,6 +114,14 @@ $max = $cpu['CurrentClockSpeed']
 
 while ($True)
 {
+
+	checkSettings "programs_running_cfg_guid"
+	if ($global:isDateDifferent -eq $True) { if ($global:found_hash.Count -ne 0){ $programs_running_cfg_guid = $global:found_hash} }
+	checkSettings "programs_running_cfg_xtu"
+	if ($global:isDateDifferent -eq $True) { if ($global:found_hash.Count -ne 0){ $programs_running_cfg_xtu = $global:found_hash} }
+	checkSettings "special_programs"
+	if ($global:isDateDifferent -eq $True) { if ($global:found_hash.Count -ne 0){ $special_programs = $global:found_hash} }
+
 	$special_programs_running = $False
 	foreach($key in $special_programs.Keys)		#   $key value remains globally after break
 	{
@@ -82,7 +141,7 @@ while ($True)
 		$load = $cpu['LoadPercentage']
 		$clock = $cpu['CurrentClockSpeed']
 		#if throttling has kicked in('Balanced' clockspeed must be set lower than 'Performance')
-		if($clock -lt $max){
+		if($load -gt $cpu_increase_threshold -And $clock -lt $max){
 			powercfg - setactive '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'		#'Performance'
 			xtucli -t -id 59 -v $xtu_max
 			$loop_delay = 0		#loop immediately
