@@ -137,8 +137,6 @@ $special_programs = $global:found_hash
 
 #Config Area Herevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-$cpu_increase_threshold = 30		#percentage. your real threshold set in powerplan
-
 # initial cpu setting
 $cpu_init = $programs_running_cfg_cpu['0']
 $cpu_max = $programs_running_cfg_cpu[[string]($programs_running_cfg_cpu.Count - 1)]
@@ -156,6 +154,8 @@ $loop_delay_backup = $loop_delay
 
 
 # initial powerplan 'Balanced'
+powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_init
+powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_init
 powercfg /setactive $guid0		#'Balanced'
 xtucli -t -id 59 -v $xtu_init
 
@@ -196,11 +196,11 @@ while ($True)
 		$load = $cpu['LoadPercentage']
 		$clock = $cpu['CurrentClockSpeed']
 		#if throttling has kicked in('Balanced' clockspeed must be set lower than 'Performance')
-		if($load -gt $cpu_increase_threshold -And $clock -lt $max){
+		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And $clock -lt $max){
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_max
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_max
 			powercfg /setactive $guid0
-			xtucli -t -id 59 -v $xtu_max
+			xtucli -t -id 59 -v $xtu_min
 			$loop_delay = 0		#loop immediately
 		}
 
@@ -227,6 +227,6 @@ while ($True)
 		}
 
 	}
-	
+
 	sleep $loop_delay
 }
