@@ -51,7 +51,9 @@ function checkFiles_myfiles{
 'dolphin' = 1
 'tesv' = 1
 'fsx' = 1
-'ffmpeg' = 2"
+'ffmpeg' = 2
+'7zFM' = 2
+'vmware-vmx' = 2"
 }
 
 # initial gpu setting
