@@ -1,39 +1,73 @@
-# http://www.bigsoft.co.uk/blog/2013/09/30/change-power-plan-when-application-starts
-# https://devblogs.microsoft.com/scripting/use-powershell-and-wmi-to-get-processor-information/
-# rewritten by manual
+# adaptive power management script (for laptops with intel gpu) written by dj_manual
 
 # run it via task scheduler 
 #  PowerShell.exe -windowstyle hidden -executionpolicy remotesigned <scriptlocation>\xtu_scheduler.ps1
 #  (Run whether user is logged on or not is VERY UNRELIABLE)
 
-#install intel xtu
+#this script requires intel xtucli.exe!!!
 #read cpu clock.txt and set up everything prior to using this script
 
-#config files for adding special_programs, programs_running_cfg_guid, programs_running_cfg_xtu
+#config files for adding special_programs, programs_running_cfg_cpu, programs_running_cfg_xtu
 #is in c:\xtu_scheduler_config\ for realtime editing!
 #reference inside config area below vvvv
 
+$processor_power_management_guids = @{
+"06cadf0e-64ed-448a-8927-ce7bf90eb35d" = 30
+"0cc5b647-c1df-4637-891a-dec35c318583" = 100
+"12a0ab44-fe28-4fa9-b3bd-4b64f44960a6" = 10
+"40fbefc7-2e9d-4d25-a185-0cfd8574bac6" = 1
+"45bcc044-d885-43e2-8605-ee0ec6e96b59" = 100
+"465e1f50-b610-473a-ab58-00d1077dc418" = 2
+"4d2b0152-7d5c-498b-88e2-34345392a2c5" = 15
+"893dee8e-2bef-41e0-89c6-b55d0929964c" = 5
+"94d3a615-a899-4ac5-ae2b-e4d8f634367f" = 1
+"bc5038f7-23e0-4960-96da-33abaf5935ec" = 100
+"ea062031-0e34-4ff1-9b6d-eb1059334028" = 100
+}
 
+# stuff
+$guid0 = '381b4222-f694-41f0-9685-ff5bb260df2e'		# Balanced powerplan
+$guid1 = '54533251-82be-4824-96c1-47b60b740d00'		# processor power management
+$guid2 = 'bc5038f7-23e0-4960-96da-33abaf5935ec'		# processor high clockspeed limit
+
+
+#loop dat shit
+foreach($temp in $processor_power_management_guids.Keys){
+	powercfg /attributes $guid1 $temp -ATTRIB_HIDE
+	powercfg /setdcvalueindex $guid0 $guid1 $temp $processor_power_management_guids[$temp]
+	powercfg /setacvalueindex $guid0 $guid1 $temp $processor_power_management_guids[$temp]
+}
+powercfg /setactive $guid0
 
 # your program = index
 $special_programs = @{}
 
 # find your own handmade powerplans here:
 #  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes
-# index = powerplan
-$programs_running_cfg_guid = @{}
+# index = cpu setting
+$programs_running_cfg_cpu = @{}
 
 # index = gpu setting
 $programs_running_cfg_xtu = @{}
 
-#Config Area Herevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-# settings file that will be created by default:
+
+# create config files if not exist
+function checkFiles ([string]$setting_string, [string]$value_string){
+	if((Test-Path ("c:\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
+		if((Test-Path "c:\xtu_scheduler_config") -ne $True) {
+		New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory" }
+		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt"`
+		) -ItemType "file" -value $value_string
+	}
+}
+
+# settings file created by default: (0 will the base clockspeed! key start from 0 and increment by 1)
 function checkFiles_myfiles{
-	checkFiles "programs_running_cfg_guid"`
-"0 = 'c59be9f8-02d3-4004-b5ab-5eb15fe519da'
-1 = '7a3436f1-c379-4f06-947e-fbb2755da1c0'
-2 = '7266deb3-176a-42f4-a910-f007de07a23b'"
+	checkFiles "programs_running_cfg_cpu"`
+"0 = 65
+1 = 98
+2 = 100"
 
 	checkFiles "programs_running_cfg_xtu"`
 "0 = 7.5
@@ -54,26 +88,6 @@ function checkFiles_myfiles{
 'ffmpeg' = 2
 '7zFM' = 2
 'vmware-vmx' = 2"
-}
-
-# initial gpu setting
-$xtu_init = 7.5		#750mhz		your 'Balanced' gpu setting
-$xtu_max = 10.5		#1050mhz	top speed (even 50mhz off the ogspeed and you will be frying your cpu)
-
-$cpu_increase_threshold = 30		#percentage. your real threshold set in powerplan
-
-$loop_delay = 5		#seconds
-
-#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# create config files if not exist
-function checkFiles ([string]$setting_string, [string]$value_string){
-	if((Test-Path ("c:\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
-		if((Test-Path "c:\xtu_scheduler_config") -ne $True) {
-		New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory" }
-		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt"`
-		) -ItemType "file" -value $value_string
-	}
 }
 
 checkFiles_myfiles
@@ -112,18 +126,37 @@ function checkSettings ($setting_string){
 	}
 }
 
-findFiles "programs_running_cfg_guid"
-$programs_running_cfg_guid = $global:found_hash
+findFiles "programs_running_cfg_cpu"
+$programs_running_cfg_cpu = $global:found_hash
 findFiles "programs_running_cfg_xtu"
 $programs_running_cfg_xtu = $global:found_hash
 findFiles "special_programs"
 $special_programs = $global:found_hash
 
 
+
+#Config Area Herevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+$cpu_increase_threshold = 30		#percentage. your real threshold set in powerplan
+
+# initial cpu setting
+$cpu_init = $programs_running_cfg_cpu['0']
+$cpu_max = $programs_running_cfg_cpu[[string]($programs_running_cfg_cpu.Count - 1)]
+
+# initial gpu setting
+$xtu_init = $programs_running_cfg_xtu['0']
+$xtu_max = $programs_running_cfg_xtu[[string]($programs_running_cfg_xtu.Count - 1)]
+
+$loop_delay = 5		#seconds
+
+#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 $loop_delay_backup = $loop_delay
 
+
 # initial powerplan 'Balanced'
-powercfg -setactive '381b4222-f694-41f0-9685-ff5bb260df2e'		#'Balanced'
+powercfg /setactive $guid0		#'Balanced'
 xtucli -t -id 59 -v $xtu_init
 
 # initial cpu max speed
@@ -134,8 +167,8 @@ $max = $cpu['CurrentClockSpeed']
 while ($True)
 {
 	checkFiles_myfiles
-	checkSettings "programs_running_cfg_guid"
-	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_guid = $global:found_hash }
+	checkSettings "programs_running_cfg_cpu"
+	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_cpu = $global:found_hash }
 	checkSettings "programs_running_cfg_xtu"
 	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_xtu = $global:found_hash }
 	checkSettings "special_programs"
@@ -153,7 +186,10 @@ while ($True)
 		}
 	}
 	
-	$current = powercfg -getactivescheme
+	$temp = powercfg /query $guid0 $guid1 $guid2
+	$temp = Out-String -InputObject $temp
+	$temp = $temp.SubString($temp.Length - 6, 6).trim()
+	$temp = '{0:d}' -f [int]("0x" + $temp)
 	if ($special_programs_running -eq $True)
 	{
 		$cpu = Get-WmiObject -class Win32_Processor
@@ -161,15 +197,19 @@ while ($True)
 		$clock = $cpu['CurrentClockSpeed']
 		#if throttling has kicked in('Balanced' clockspeed must be set lower than 'Performance')
 		if($load -gt $cpu_increase_threshold -And $clock -lt $max){
-			powercfg - setactive '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'		#'Performance'
+			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_max
+			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_max
+			powercfg /setactive $guid0
 			xtucli -t -id 59 -v $xtu_max
 			$loop_delay = 0		#loop immediately
 		}
 
 		#change power plan
-		elseif ($current -match $programs_running_cfg_guid[$special_programs[$key]] -eq $False)
+		elseif ($temp -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
 		{
-			powercfg -setactive $programs_running_cfg_guid[$special_programs[$key]]
+			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
+			powercfg /setacvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
+			powercfg /setactive $guid0
 			xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
 			$loop_delay = $loop_delay_backup
 		}
@@ -177,9 +217,11 @@ while ($True)
 	else
 	{
 		#change back to 'Balanced' if nothings running
-		if ($current -match '381b4222-f694-41f0-9685-ff5bb260df2e' -eq $False)
+		if ($temp -match $cpu_init -eq $False)
 		{
-			powercfg -setactive '381b4222-f694-41f0-9685-ff5bb260df2e'		#'Balanced'
+			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_init
+			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_init
+			powercfg /setactive $guid0
 			xtucli -t -id 59 -v $xtu_init
 			$loop_delay = $loop_delay_backup
 		}

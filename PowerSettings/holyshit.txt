@@ -1,5 +1,5 @@
 #  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes
-# 시퓨 클럭속도 변경
+# 시퓨 클럭속도 설정 변경
 powercfg /setdcvalueindex 381b4222-f694-41f0-9685-ff5bb260df2e 54533251-82be-4824-96c1-47b60b740d00 bc5038f7-23e0-4960-96da-33abaf5935ec 100
 powercfg /setacvalueindex 381b4222-f694-41f0-9685-ff5bb260df2e 54533251-82be-4824-96c1-47b60b740d00 bc5038f7-23e0-4960-96da-33abaf5935ec 100
 powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e #적용하는대 꼭 필요
@@ -15,3 +15,8 @@ powercfg /attributes 54533251-82be-4824-96c1-47b60b740d00 bc5038f7-23e0-4960-96d
 
 
 #	잠시보류
+
+# 시퓨 클럭속도 설정 확인
+$temp = powercfg /query 381b4222-f694-41f0-9685-ff5bb260df2e 54533251-82be-4824-96c1-47b60b740d00 bc5038f7-23e0-4960-96da-33abaf5935ec
+$temp = Out-String -InputObject $temp
+$temp = $temp.SubString($temp.Length - 6, 6).trim()
