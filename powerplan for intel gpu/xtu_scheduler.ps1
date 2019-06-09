@@ -139,11 +139,12 @@ $special_programs = $global:found_hash
 
 # initial cpu setting
 $cpu_init = $programs_running_cfg_cpu['0']
-$cpu_max = $programs_running_cfg_cpu[[string]($programs_running_cfg_cpu.Count - 1)]
+$cpu_max = 100
 
 # initial gpu setting
 $xtu_init = $programs_running_cfg_xtu['0']
-$xtu_max = $programs_running_cfg_xtu[[string]($programs_running_cfg_xtu.Count - 1)]
+$xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -index 5} | out-string
+) -replace "x",'').trim()
 
 $loop_delay = 5		#seconds
 
@@ -200,7 +201,7 @@ while ($True)
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_max
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_max
 			powercfg /setactive $guid0
-			xtucli -t -id 59 -v $xtu_min
+			xtucli -t -id 59 -v $xtu_max
 			$loop_delay = 0		#loop immediately
 		}
 
