@@ -13,7 +13,7 @@
 #is in c:\xtu_scheduler_config\ for realtime editing!
 #reference inside config area below vvvv
 
-#Config Area Herevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
 
 # your program = index
 $special_programs = @{}
@@ -25,6 +25,34 @@ $programs_running_cfg_guid = @{}
 
 # index = gpu setting
 $programs_running_cfg_xtu = @{}
+
+#Config Area Herevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+# settings file that will be created by default:
+function checkFiles_myfiles{
+	checkFiles "programs_running_cfg_guid"`
+"0 = 'c59be9f8-02d3-4004-b5ab-5eb15fe519da'
+1 = '7a3436f1-c379-4f06-947e-fbb2755da1c0'
+2 = '7266deb3-176a-42f4-a910-f007de07a23b'"
+
+	checkFiles "programs_running_cfg_xtu"`
+"0 = 7.5
+1 = 5.5
+2 = 4.5"
+
+	checkFiles "special_programs"`
+"'drt' = 0
+'dirtrally2' = 0
+'acad' = 1
+'cl' = 2
+'link' = 2
+'pcsx2' = 1
+'launcher' = 1
+'dolphin' = 1
+'tesv' = 1
+'fsx' = 1
+'ffmpeg' = 2"
+}
 
 # initial gpu setting
 $xtu_init = 7.5		#750mhz		your 'Balanced' gpu setting
@@ -39,31 +67,14 @@ $loop_delay = 5		#seconds
 # create config files if not exist
 function checkFiles ([string]$setting_string, [string]$value_string){
 	if((Test-Path ("c:\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
-		New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory"
-		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt") -ItemType "file" -value $value_string
+		if((Test-Path "c:\xtu_scheduler_config") -ne $True) {
+		New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory" }
+		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt"`
+		) -ItemType "file" -value $value_string
 	}
 }
 
-checkFiles "programs_running_cfg_guid" "0 = 'c59be9f8-02d3-4004-b5ab-5eb15fe519da'
-1 = '7a3436f1-c379-4f06-947e-fbb2755da1c0'
-2 = '7266deb3-176a-42f4-a910-f007de07a23b'"
-
-checkFiles "programs_running_cfg_xtu" "0 = 7.5
-1 = 5.5
-2 = 4.5"
-
-checkFiles "special_programs" "'drt' = 0
-'dirtrally2' = 0
-'acad' = 1
-'cl' = 2
-'link' = 2
-'pcsx2' = 1
-'launcher' = 1
-'dolphin' = 1
-'tesv' = 1
-'fsx' = 1
-'ffmpeg' = 2"
-
+checkFiles_myfiles
 
 # used for checking whether settings file was modified
 $global:lastModifiedDate = @{}
@@ -73,19 +84,22 @@ $global:isDateDifferent = $False	#flag for findFiles
 # find settings file
 function findFiles ($setting_string){
 	$file = Get-Content ("c:\xtu_scheduler_config\" + $setting_string + ".txt")
-	$global:lastModifiedDate.add($setting_string, (Get-Item ("c:\xtu_scheduler_config\" + $setting_string + ".txt")).LastWriteTime)
+	$global:lastModifiedDate.add($setting_string, (Get-Item ("c:\xtu_scheduler_config\"`
+	+ $setting_string + ".txt")).LastWriteTime)
 	if ($? -eq $True)
 	{
 		$global:found_hash = @{}
 		foreach ($line in $file)
 		{
-			$global:found_hash.add($line.split("=")[0].trim("'", " "), $line.split("=")[1].trim("'", " "))
+			$global:found_hash.add($line.split("=")[0].trim("'", " "),`
+			$line.split("=")[1].trim("'", " "))
 		}
 	}
 }
 
 function checkSettings ($setting_string){
-	$currentModifiedDate = (Get-Item ("c:\xtu_scheduler_config\" + $setting_string + ".txt")).LastWriteTime
+	$currentModifiedDate = (Get-Item ("c:\xtu_scheduler_config\" + $setting_string + ".txt"`
+	)).LastWriteTime
 	if($global:lastModifiedDate[$setting_string] -ne $currentModifiedDate){
 		$global:isDateDifferent = $True
 		$global:lastModifiedDate.Remove($setting_string)
@@ -97,11 +111,12 @@ function checkSettings ($setting_string){
 }
 
 findFiles "programs_running_cfg_guid"
-if ($global:found_hash.Count -ne 0){ $programs_running_cfg_guid = $global:found_hash}
+$programs_running_cfg_guid = $global:found_hash
 findFiles "programs_running_cfg_xtu"
-if ($global:found_hash.Count -ne 0){ $programs_running_cfg_xtu = $global:found_hash}
+$programs_running_cfg_xtu = $global:found_hash
 findFiles "special_programs"
-if ($global:found_hash.Count -ne 0){ $special_programs = $global:found_hash}
+$special_programs = $global:found_hash
+
 
 $loop_delay_backup = $loop_delay
 
@@ -116,14 +131,14 @@ $max = $cpu['CurrentClockSpeed']
 
 while ($True)
 {
-
+	checkFiles_myfiles
 	checkSettings "programs_running_cfg_guid"
-	if ($global:isDateDifferent -eq $True) { if ($global:found_hash.Count -ne 0){ $programs_running_cfg_guid = $global:found_hash} }
+	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_guid = $global:found_hash }
 	checkSettings "programs_running_cfg_xtu"
-	if ($global:isDateDifferent -eq $True) { if ($global:found_hash.Count -ne 0){ $programs_running_cfg_xtu = $global:found_hash} }
+	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_xtu = $global:found_hash }
 	checkSettings "special_programs"
-	if ($global:isDateDifferent -eq $True) { if ($global:found_hash.Count -ne 0){ $special_programs = $global:found_hash} }
-
+	if ($global:isDateDifferent -eq $True) { $special_programs = $global:found_hash }
+	
 	$special_programs_running = $False
 	foreach($key in $special_programs.Keys)		#   $key value remains globally after break
 	{
