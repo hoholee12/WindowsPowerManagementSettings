@@ -1,6 +1,22 @@
 MF840KH/A WinAPM settings
 
+(power options -> any powerplan -> advanced powerplan settings
+ -> find processor power management from large pile of dropdowns
+ -> and you will find processor max state option
+ 
+ -> you should change both ac/dc values)
+
+
+
+
+
+
+
 i5-5257u CPU
+
+(settings are different on every different cpus.
+i found these values by incrementing each values from 1 to 100,
+its tedious but required for configuring xtu_scheduler.ps1 properly)
 
 32p 0.8Ghz - base
 43p 0.9Ghz - base
@@ -14,25 +30,70 @@ i5-5257u CPU
 99p 2.7Ghz - turboboost - 400mhz
 100p 3.1Ghz - turboboost <<<<
 
+(i found that every exponential dip in cpu speed ==> 100mhz~150mhz worth of room for iGPU)
+
+
+
+
+
+
+
 Iris6100 GPU
 
 450mhz - base
-900mhz - invisible limit(actual max speed)
-1050mhz - max speed(impossible to game in this speed in real world anyway)
+900mhz - invisible limit(actual max speed, still almost impossible without thermal throttling in 10 minutes)
+1050mhz - max speed(impossible to reach because macbook current rate limit is very low and thermal system is shit)
 
 Maximum Battery Life - forces base 450mhz
 Balanced - only drops when not much is used
-Maximum Performance - always tries to reach maximum target speed
+Maximum Performance - always tries to reach maximum target speed(never a good idea on a macbook)
+
+my settings:
+CPU					iGPU
+---------------------------------------
+
+100p(3.1ghz)		Maximum Battery Life(450mhz max)
+98p(2.6ghz) 		Balanced(550mhz max)
+65p(1.6ghz)			Balanced(750mhz max)
+==================================================================
 
 
-create dozens of powerplans for each programs, and easily switch by using some automation tools like process lasso.
 
-for macbooks, use MacsFanControl for windows. set sensor-based value to CPU Core 0(or 1 on newer versions), the most responsive sensor(most responsive sensors are vital for preventing thermal throttling).
-(lubbos fan control works well too, only that gpu temperature reading doesnt work....)
 
-starting some idle programs like chrome browser may burst up the cpu clock and in turn burst up fan speed(will make you wet pants). you dont want that. edit the existing idle powerplan you're using to lower the cpu clock. and create other powerplans for programs that really need cpu power.
 
-below are my detailed settings: vvvvv
+
+
+for macbooks, use MacsFanControl for windows. set sensor-based value to CPU Core 0(or 1 on newer versions); the most responsive sensor.
+
+(if you dont want the nagging software; 'lubbos fan control' works well too(im using it), if you know how to set it to run on boot,
+and if you know how to edit ini files lol
+set them readonly after editing then it should be fine)
+
+recommended settings for fancontrol vvv
+macsfancontrol settings===========================================
+fan settings: 55c ~ 85c cpu core 1
+==================================================================
+
+
+
+
+
+
+
+starting some idle programs like chrome browser may burst up the cpu clock and in turn burst up fan speed.
+you dont want that.
+test and list your cpu clockspeed like above^, and again test which clockspeed suits best while not bursting
+your fan. after finding the right clockspeed value, use that as the base clock for xtu_scheduler.ps1
+(read the description inside script)
+
+
+
+
+
+
+
+only for reference;
+(OBSOLETE)use gpu.sh to do specific controls like changing gpu clockspeed automatically(OBSOLETE)
 
 use in windows task scheduler custom event===================
 intel xtu doesnt save all settings, its better to launch xtucli at boot manually
@@ -47,16 +108,20 @@ disable everything in conditions tab
 check run in highest privilege
 
 unfortunately, task scheduler has a BUG where 'ac power must be on' condition cannot be changed when 'set run whether loggeed in or not'.
-==================================================================
+this somehow works on 'Performance' powerplan however... i have no idea
+(OBSOLETE)=============================================================================(OBSOLETE)
+
+OR
+
+use xtu_scheduler.ps1 ive written recently!! set it to run on login and BOOM it works!!!
+the script does everything detailed in this document and more.
+(read how to set it on task scheduler detailed in the script)
 
 
-xtucli============================================================
-use gpu.sh to do specific controls like changing gpu clockspeed automatically
-==================================================================
 
-macsfancontrol settings===========================================
-fan settings: 55c ~ 85c cpu core 1
-==================================================================
+
+
+
 
 my current powerplans=============================================
 use ProcessorPowerSettingsCompact.reg
@@ -70,19 +135,14 @@ processor performance boost policy = 100
 'Performance' has the default settings that also allows task manager to read event on battery,
 but im too lazy to find out which setting(theres a fuck load of settings apart from these 5),
 
-do urself a favor and use the brand new 'xtu_scheduler.ps1'(read the comments inside the script as well)
+OR
+
+do urself a favor and use the brand new xtu_scheduler.ps1
 
 
-profilename	throttlemax	iGPUstate
----------------------------------------
 
-custom:
-encoding		100p(3.1ghz)		Maximum Battery Life(450mhz max)
-Performance		98p(2.6ghz) 		Balanced(550mhz max)		<-- userpowermode sometimes doesnt respond
-maxpower		98p(2.6ghz)			Balanced(550mhz max)		<-- so create another one
-Balanced		65p(1.6ghz)			Balanced(750mhz max)		<-- userpowermode sometimes doesnt respond
-throttle		65p(1.6ghz)			Balanced(750mhz max)		<-- so create another one
-==================================================================
+
+
 
 
 misc==============================================================
@@ -98,7 +158,14 @@ tips for reducing gta5 cpu usage: decrease maxlodscale to negative value, along 
 tips for dirt rally: global settings lowest, shader settings high, set tree/track lod=0.3, shadow size=128
 tips for fallout 4: edit prefs xml file to set custom res, and 'readonly' it
 
-some games require 2x msaa for several effects. use it with lowest resolution you can get(800x450 or 856x480)
+some games require 2x msaa for several effects. use it with lowest resolution you can get
+(800x450 or 856x480 achievable with custom resolution setting in intel graphics panel)
+
+
+
+
+
+
 
 to protect battery:
 low battery percentage: 30%

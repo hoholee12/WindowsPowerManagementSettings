@@ -5,11 +5,12 @@
 #  (Run whether user is logged on or not is VERY UNRELIABLE)
 
 #this script requires intel xtucli.exe!!!
-#read cpu clock.txt and set up everything prior to using this script
+#read cpu clock.txt and ready up everything prior to configuring this script
 
 #config files for adding special_programs, programs_running_cfg_cpu, programs_running_cfg_xtu
-#is in c:\xtu_scheduler_config\ for realtime editing!
-#reference inside config area below vvvv
+#				YOU CAN EDIT CONFIG REALTIME!!!: its in c:\xtu_scheduler_config\
+
+#reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 $processor_power_management_guids = @{
 "06cadf0e-64ed-448a-8927-ce7bf90eb35d" = 80			#cpu high threshold; lower this for performance
@@ -26,7 +27,7 @@ $processor_power_management_guids = @{
 }
 
 # stuff
-$guid0 = '381b4222-f694-41f0-9685-ff5bb260df2e'		# Balanced powerplan
+$guid0 = '381b4222-f694-41f0-9685-ff5bb260df2e'		# you can change to any powerplan you want as default!
 $guid1 = '54533251-82be-4824-96c1-47b60b740d00'		# processor power management
 $guid2 = 'bc5038f7-23e0-4960-96da-33abaf5935ec'		# processor high clockspeed limit
 
@@ -62,7 +63,7 @@ function checkFiles ([string]$setting_string, [string]$value_string){
 	}
 }
 
-# settings file created by default: (0 will the base clockspeed! key start from 0 and increment by 1)
+# settings file created by default: (0 will be the base clockspeed! key start from 0 and increment by 1)
 function checkFiles_myfiles{
 	checkFiles "programs_running_cfg_cpu"`
 "0 = 65
@@ -134,36 +135,35 @@ findFiles "special_programs"
 $special_programs = $global:found_hash
 
 
-
-#Config Area Herevvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
 # initial cpu setting
 $cpu_init = $programs_running_cfg_cpu['0']
 $cpu_max = 100
 
-# initial gpu setting
+# initial gpu setting(make sure nothing is running on boot that uses xtu besides this script,
+# and you should disable all xtu profiles as well)
 $xtu_init = $programs_running_cfg_xtu['0']
 $xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -index 5} | out-string
 ) -replace "x",'').trim()
 
 $loop_delay = 5		#seconds
 
-#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 
 $loop_delay_backup = $loop_delay
 
 
-# initial powerplan 'Balanced'
+# initial powerplan to whatever guid0 is
 powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_init
 powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_init
-powercfg /setactive $guid0		#'Balanced'
+powercfg /setactive $guid0
 xtucli -t -id 59 -v $xtu_init
 
 # initial cpu max speed
 $cpu = Get-WmiObject -class Win32_Processor
 $max = $cpu['CurrentClockSpeed']
 
+#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 while ($True)
 {
@@ -196,7 +196,8 @@ while ($True)
 		$cpu = Get-WmiObject -class Win32_Processor
 		$load = $cpu['LoadPercentage']
 		$clock = $cpu['CurrentClockSpeed']
-		#if throttling has kicked in('Balanced' clockspeed must be set lower than 'Performance')
+		#if throttling has kicked in, set everything to max clockspeed for a brief time
+		#it fucks up the baked-in throttling system or whatever the fuck that is... it just works
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And $clock -lt $max){
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_max
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_max
