@@ -79,13 +79,13 @@ function checkFiles_myfiles{
 "'drt' = 0
 'dirtrally2' = 0
 'acad' = 1
-'cl' = 2
-'link' = 2
-'pcsx2' = 1
 'launcher' = 1
-'dolphin' = 1
 'tesv' = 1
 'fsx' = 1
+'cl' = 2
+'link' = 2
+'pcsx2' = 2
+'dolphin' = 2
 'ffmpeg' = 2
 '7zFM' = 2
 'vmware-vmx' = 2"
