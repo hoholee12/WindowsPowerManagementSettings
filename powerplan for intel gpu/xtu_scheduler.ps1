@@ -82,6 +82,8 @@ function checkFiles_myfiles{
 'launcher' = 1
 'tesv' = 1
 'fsx' = 1
+'Journey' = 1
+'ppsspp' = 1
 'cl' = 2
 'link' = 2
 'pcsx2' = 2
@@ -178,9 +180,8 @@ while ($True)
 	$special_programs_running = $False
 	foreach($key in $special_programs.Keys)		#   $key value remains globally after break
 	{
-		Get-Process -ErrorAction SilentlyContinue -Name $key
-		$running = $?
-		if ($running -eq $True)
+		$temp = Get-Process -ErrorAction SilentlyContinue -Name ($key + '*')
+		if ($temp -ne $null)
 		{
 			$special_programs_running = $True
 			break
