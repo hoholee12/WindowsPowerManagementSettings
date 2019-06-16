@@ -84,12 +84,15 @@ function checkFiles_myfiles{
 'fsx' = 1
 'Journey' = 1
 'ppsspp' = 1
+'nullDC' = 1
+'pcsxr' = 1
+'Project64' = 1
 'cl' = 2
 'link' = 2
 'pcsx2' = 2
 'dolphin' = 2
 'ffmpeg' = 2
-'7zFM' = 2
+'7z' = 2
 'vmware-vmx' = 2"
 }
 
