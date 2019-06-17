@@ -148,19 +148,34 @@ do urself a favor and use the brand new xtu_scheduler.ps1
 misc==============================================================
 set custom resolution using intel graphics panel!
 set vsync driver on using intel graphics panel(do not force anistropy, green dot artifacts on graphics)
-set 30fps limit on games using rivatuner statistics server!
+some games have problematic vsync. disable it and use rivatuner to manually limit fps
+
+some pc games require 2x msaa for several effects. use it with lowest resolution you can get
+(800x450, 856x480, 768x480, 960x600 achievable with custom resolution setting in intel graphics panel)
+
 
 my game settings:
 
-some games have problematic vsync. disable it and use rivatuner to manually limit fps
+tips for gta5:
+	decrease maxlodscale to negative value, along with ped and vehicle lod bias(-0.300000)
 
-tips for reducing gta5 cpu usage: decrease maxlodscale to negative value, along with ped and vehicle lod bias(-0.300000)
-tips for dirt rally: global settings lowest, shader settings high, set tree/track lod=0.3, shadow size=128
-tips for fallout 4: edit prefs xml file to set custom res, and 'readonly' it
+tips for dirt rally:
+	global settings lowest, shader settings high, set tree/track lod=0.3, shadow size=128
 
-some games require 2x msaa for several effects. use it with lowest resolution you can get
-(800x450 or 856x480 achievable with custom resolution setting in intel graphics panel)
+tips for bethesda games:
 
+tips for dolphin emulator:
+	enable 'skip efb access from cpu', 'ignore format changes', 'store efb copies to texture only'
+	, 'store xfb copies to texture only'. override cpu clockspeed to 50%(some nintendo games work just right on 50% and above)
+
+tips for pcsx2 emulator:
+	vu cycle stealing max, vuthread on.(basically stealing 50% of ee performance, more effective than overriding)
+	dont touch ee cyclerate.
+
+tips for ppsspp emulator:
+	'2x internal 1x display => 2x supersampling' or use spline36 upscaler. YES hardware transform, NO software skinning
+	, NO vertex cache, YES lazy texture caching, YES retain changed textures, NO disable slower effects. auto frameskip 1.
+	clockspeed does nothing except softlimit fps on some games.
 
 
 
