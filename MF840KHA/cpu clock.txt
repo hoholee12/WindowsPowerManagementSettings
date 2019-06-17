@@ -163,6 +163,7 @@ tips for dirt rally:
 	global settings lowest, shader settings high, set tree/track lod=0.3, shadow size=128
 
 tips for bethesda games:
+	shadow size=at least 1024 or bigger(one shadow source on whole world, too blocky under 1024)
 
 tips for dolphin emulator:
 	enable 'skip efb access from cpu', 'ignore format changes', 'store efb copies to texture only'
