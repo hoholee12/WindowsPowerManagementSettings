@@ -223,7 +223,10 @@ while ($True)
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
 			powercfg /setactive $guid0
-			xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
+			if ($programs_running_cfg_xtu[$special_programs[$key]] -le $xtu_max)
+			{
+				xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
+			}
 			$loop_delay = $loop_delay_backup
 		}
 	}
@@ -235,7 +238,10 @@ while ($True)
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_init
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_init
 			powercfg /setactive $guid0
-			xtucli -t -id 59 -v $xtu_init
+			if ($xtu_init -le $xtu_max)
+			{
+				xtucli -t -id 59 -v $xtu_init
+			}
 			$loop_delay = $loop_delay_backup
 		}
 
