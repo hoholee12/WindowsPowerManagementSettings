@@ -223,7 +223,8 @@ while ($True)
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
 			powercfg /setactive $guid0
-			if ($programs_running_cfg_xtu[$special_programs[$key]] -le $xtu_max)
+			
+			if ([float]$programs_running_cfg_xtu[$special_programs[$key]] -le [float]$xtu_max)
 			{
 				xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
 			}
@@ -238,7 +239,8 @@ while ($True)
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_init
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_init
 			powercfg /setactive $guid0
-			if ($xtu_init -le $xtu_max)
+
+			if ([float]$xtu_init -le [float]$xtu_max)
 			{
 				xtucli -t -id 59 -v $xtu_init
 			}
