@@ -66,19 +66,19 @@ function checkFiles ([string]$setting_string, [string]$value_string){
 # settings file created by default: (0 will be the base clockspeed! key start from 0 and increment by 1)
 function checkFiles_myfiles{
 	checkFiles "programs_running_cfg_cpu"`
-"0 = 65
+"0 = 84
 1 = 98
-2 = 100"
+2 = 100
+3 = 65"
 
 	checkFiles "programs_running_cfg_xtu"`
-"0 = 7.5
+"0 = 6.5
 1 = 5.5
-2 = 4.5"
+2 = 4.5
+3 = 7.5"
 
 	checkFiles "special_programs"`
-"'drt' = 0
-'dirtrally2' = 0
-'acad' = 1
+"'acad' = 1
 'launcher' = 1
 'tesv' = 1
 'fsx' = 1
@@ -93,7 +93,10 @@ function checkFiles_myfiles{
 'dolphin' = 2
 'ffmpeg' = 2
 '7z' = 2
-'vmware-vmx' = 2"
+'vmware-vmx' = 2
+'jdownloader2' = 2
+'drt' = 3
+'dirtrally2' = 3"
 }
 
 checkFiles_myfiles
@@ -179,6 +182,10 @@ while ($True)
 	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_xtu = $global:found_hash }
 	checkSettings "special_programs"
 	if ($global:isDateDifferent -eq $True) { $special_programs = $global:found_hash }
+	#	init may have been changed
+	$cpu_init = $programs_running_cfg_cpu['0']
+	$xtu_init = $programs_running_cfg_xtu['0']
+	
 	
 	$special_programs_running = $False
 	foreach($key in $special_programs.Keys)		#   $key value remains globally after break
