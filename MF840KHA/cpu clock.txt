@@ -24,11 +24,11 @@ its tedious but required for configuring xtu_scheduler.ps1 properly)
 58p 1.4Ghz - turboboost - 1700mhz
 65p 1.6Ghz - turboboost - 1500mhz <<
 73p 1.8Ghz - turboboost - 1300mhz
-84p 2.0Ghz - turboboost - 1100mhz
+84p 2.0Ghz - turboboost - 1100mhz <<
 95p 2.3Ghz - turboboost - 800mhz
 98p 2.6Ghz - turboboost - 500mhz <<<
 99p 2.7Ghz - turboboost - 400mhz
-100p 3.1Ghz - turboboost <<<<
+100p 3.1Ghz - turboboost <<<<<<<<<<<
 
 (i found that every exponential dip in cpu speed ==> 100mhz~150mhz worth of room for iGPU)
 
@@ -50,12 +50,13 @@ Maximum Performance - always tries to reach maximum target speed(never a good id
 
 my settings:
 CPU					iGPU
----------------------------------------
+----------------------------------------
 
 100p(3.1ghz)		Maximum Battery Life(450mhz max)
 98p(2.6ghz) 		Balanced(550mhz max)
+84p(2.0ghz)			Balanced(650mhz max)
 65p(1.6ghz)			Balanced(750mhz max)
-==================================================================
+========================================================================================================================
 
 
 
@@ -63,16 +64,17 @@ CPU					iGPU
 
 
 
-for macbooks, use MacsFanControl for windows. set sensor-based value to CPU Core 0(or 1 on newer versions); the most responsive sensor.
+for macbooks, use MacsFanControl for windows. set sensor-based value to CPU Core 0(or 1 on newer versions);
+the most responsive sensor.
 
-(if you dont want the nagging software; 'lubbos fan control' works well too(im using it), if you know how to set it to run on boot,
-and if you know how to edit ini files lol
+(if you dont want the nagging software; 'lubbos fan control' works well too(im using it), if you know how to set it
+to run on boot, and if you know how to edit ini files lol
 set them readonly after editing then it should be fine)
 
 recommended settings for fancontrol vvv
-macsfancontrol settings===========================================
+macsfancontrol settings=================================================================================================
 fan settings: 55c ~ 85c cpu core 1
-==================================================================
+========================================================================================================================
 
 
 
@@ -95,7 +97,7 @@ your fan. after finding the right clockspeed value, use that as the base clock f
 only for reference;
 (OBSOLETE)use gpu.sh to do specific controls like changing gpu clockspeed automatically(OBSOLETE)
 
-use in windows task scheduler custom event===================
+use in windows task scheduler custom event==============================================================================
 intel xtu doesnt save all settings, its better to launch xtucli at boot manually
 
 event trigger - log: System - Power-Troubleshooter - event id: 1 	(reapply after wake)
@@ -107,9 +109,10 @@ owner should be your account name(then set run whether logged in or not, and che
 disable everything in conditions tab
 check run in highest privilege
 
-unfortunately, task scheduler has a BUG where 'ac power must be on' condition cannot be changed when 'set run whether loggeed in or not'.
+unfortunately, task scheduler has a BUG where 'ac power must be on' condition cannot be changed when:
+'set run whether loggeed in or not'.
 this somehow works on 'Performance' powerplan however... i have no idea
-(OBSOLETE)=============================================================================(OBSOLETE)
+(OBSOLETE)====================================================================================================(OBSOLETE)
 
 OR
 
@@ -123,7 +126,7 @@ the script does everything detailed in this document and more.
 
 
 
-my current powerplans=============================================
+my current powerplans===================================================================================================
 use ProcessorPowerSettingsCompact.reg
 processor performance max/min core parking = 100
 processor performance increase/decrease threshold = 30/10
@@ -145,13 +148,14 @@ do urself a favor and use the brand new xtu_scheduler.ps1
 
 
 
-misc==============================================================
+misc====================================================================================================================
 set custom resolution using intel graphics panel!
 set vsync driver on using intel graphics panel(do not force anistropy, green dot artifacts on graphics)
 some games have problematic vsync. disable it and use rivatuner to manually limit fps
 
 some pc games require 2x msaa for several effects. use it with lowest resolution you can get
-(800x450, 856x480, 768x480, 960x600 achievable with custom resolution setting in intel graphics panel)
+(800x450, 856x480[16:9], or 768x480, 960x600[16:10] achievable with custom resolution setting in intel graphics panel)
+(if game doesnt find custom resolutions, set it to the lowest resolution you can get and set aspect ratio to 16:9 16:10)
 
 
 my game settings:
@@ -167,7 +171,8 @@ tips for bethesda games:
 
 tips for dolphin emulator:
 	enable 'skip efb access from cpu', 'ignore format changes', 'store efb copies to texture only'
-	, 'store xfb copies to texture only'. override cpu clockspeed to 50%(some nintendo games work just right on 50% and above)
+	, 'store xfb copies to texture only'. override cpu clockspeed to 50%(some nintendo games work just right on 50%
+	and above)
 
 tips for pcsx2 emulator:
 	vu cycle stealing max, vuthread on.(basically stealing 50% of ee performance, more effective than overriding)
@@ -175,8 +180,8 @@ tips for pcsx2 emulator:
 
 tips for ppsspp emulator:
 	'2x internal 1x display => 2x supersampling' or use spline36 upscaler. YES hardware transform, NO software skinning
-	, NO vertex cache, YES lazy texture caching, YES retain changed textures, NO disable slower effects. auto frameskip 1.
-	clockspeed does nothing except softlimit fps on some games.
+	, NO vertex cache, YES lazy texture caching, YES retain changed textures, NO disable slower effects.
+	auto frameskip 1. clockspeed does nothing except softlimit fps on some games.
 
 
 
