@@ -94,7 +94,6 @@ function checkFiles_myfiles{
 'ffmpeg' = 2
 '7z' = 2
 'vmware-vmx' = 2
-'jdownloader2' = 2
 'drt' = 3
 'dirtrally2' = 3"
 }
