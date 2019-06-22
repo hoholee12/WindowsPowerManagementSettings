@@ -88,6 +88,7 @@ function checkFiles_myfiles{
 'pcsxr' = 1
 'Project64' = 1
 'ace7game' = 1
+'pcars' = 1
 'cl' = 2
 'link' = 2
 'pcsx2' = 2
