@@ -171,8 +171,9 @@ tips for bethesda games:
 
 tips for dolphin emulator:
 	enable 'skip efb access from cpu', 'ignore format changes', 'store efb copies to texture only'
-	, 'store xfb copies to texture only'. override cpu clockspeed to 50%(some nintendo games work just right on 50%
-	and above)
+	, 'store xfb copies to texture only'.
+	games struggling to keep up fps: override clockspeed to 50%
+	(some games do require fullspeed for sync so dont do global)
 
 tips for pcsx2 emulator:
 	vu cycle stealing max, vuthread on.(basically stealing 50% of ee performance, more effective than overriding)
@@ -183,7 +184,9 @@ tips for ppsspp emulator:
 	, NO vertex cache, YES lazy texture caching, YES retain changed textures, NO disable slower effects.
 	auto frameskip 1. clockspeed does nothing except softlimit fps on some games.
 
-
+tips for PROJECT CARS:
+	game requires cpu power more than gpu power. 2.6ghz is enough, also at least some power required for gpu.
+	disable 'enhanced mirrors'(main problem). texture quality medium is good.
 
 
 
