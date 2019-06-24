@@ -56,7 +56,7 @@ CPU					iGPU
 98p(2.6ghz) 		Balanced(550mhz max)
 84p(2.0ghz)			Balanced(650mhz max)
 65p(1.6ghz)			Balanced(750mhz max)
-98p(2.6ghz) 		Balanced(750mhz max)			-> for semi boost
+95p(2.3ghz) 		Balanced(750mhz max)			-> for semi boost
 ========================================================================================================================
 
 
@@ -164,7 +164,6 @@ my game settings:
 tips for gta5:
 	decrease maxlodscale to negative value, along with ped and vehicle lod bias(-0.300000)
 	shader: high(looks alot better), reflection: med(performance eater)
-	at least 2.6ghz required for cpu, at least 750mhz required for gpu
 
 tips for dirt rally:
 	global settings lowest, shader settings high, set tree/track lod=0.3, shadow size=128

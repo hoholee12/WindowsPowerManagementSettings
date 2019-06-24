@@ -70,7 +70,7 @@ function checkFiles_myfiles{
 1 = 98
 2 = 100
 3 = 65
-4 = 98"
+4 = 95"
 
 	checkFiles "programs_running_cfg_xtu"`
 "0 = 6.5
@@ -101,8 +101,7 @@ function checkFiles_myfiles{
 'drt' = 3
 'dirtrally2' = 3
 'gta5' = 4
-'gtaiv' = 4
-'borderlands2' = 4"
+'gtaiv' = 4"
 }
 
 checkFiles_myfiles
@@ -179,6 +178,8 @@ $max = $cpu['CurrentClockSpeed']
 
 #Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+$sw = 0
+
 while ($True)
 {
 	checkFiles_myfiles
@@ -216,10 +217,24 @@ while ($True)
 		#if throttling has kicked in, set everything to max clockspeed for a brief time
 		#it fucks up the baked-in throttling system or whatever the fuck that is... it just works
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And $clock -lt $max){
-			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_max
-			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_max
-			powercfg /setactive $guid0
-			xtucli -t -id 59 -v $xtu_max
+			if($sw -eq 0){
+				powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_max
+				powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_max
+				powercfg /setactive $guid0
+				xtucli -t -id 59 -v $xtu_max
+				$sw = 1
+			}
+			else{
+				powercfg /setdcvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
+				powercfg /setacvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
+				powercfg /setactive $guid0
+				
+				if ([float]$programs_running_cfg_xtu[$special_programs[$key]] -le [float]$xtu_max)
+				{
+					xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
+				}
+				$sw = 0
+			}
 			$loop_delay = 0		#loop immediately
 		}
 
