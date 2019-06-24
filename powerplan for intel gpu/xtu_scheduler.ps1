@@ -69,13 +69,15 @@ function checkFiles_myfiles{
 "0 = 84
 1 = 98
 2 = 100
-3 = 65"
+3 = 65
+4 = 98"
 
 	checkFiles "programs_running_cfg_xtu"`
 "0 = 6.5
 1 = 5.5
 2 = 4.5
-3 = 7.5"
+3 = 7.5
+4 = 7.5"
 
 	checkFiles "special_programs"`
 "'acad' = 1
@@ -97,7 +99,10 @@ function checkFiles_myfiles{
 '7z' = 2
 'vmware-vmx' = 2
 'drt' = 3
-'dirtrally2' = 3"
+'dirtrally2' = 3
+'gta5' = 4
+'gtaiv' = 4
+'borderlands2' = 4"
 }
 
 checkFiles_myfiles
