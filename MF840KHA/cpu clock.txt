@@ -164,6 +164,7 @@ my game settings:
 tips for gta5:
 	decrease maxlodscale to negative value, along with ped and vehicle lod bias(-0.300000)
 	shader: high(looks alot better), reflection: med(performance eater)
+	at least 2.3ghz required for cpu, at least 750mhz required for gpu (30fps wise)
 
 tips for dirt rally:
 	global settings lowest, shader settings high, set tree/track lod=0.3, shadow size=128
