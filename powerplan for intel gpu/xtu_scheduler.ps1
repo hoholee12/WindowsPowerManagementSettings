@@ -201,6 +201,12 @@ while ($True)
 		if ($temp -ne $null)
 		{
 			$special_programs_running = $True
+			
+			#boost priority!!
+			foreach($boost in $temp){
+				$boost.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::high
+			}
+			
 			break
 		}
 	}
