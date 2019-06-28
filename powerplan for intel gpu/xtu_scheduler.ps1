@@ -216,6 +216,9 @@ while ($True)
 	
 	
 	$special_programs_running = $False
+	# there may be multiple target apps open. make a list of keys that fit the desc
+	$xkey = @{}
+	
 	foreach($key in $special_programs.Keys)		#   $key value remains globally after break
 	{
 		$temp = Get-Process -ErrorAction SilentlyContinue -Name ($key + '*')
@@ -229,6 +232,13 @@ while ($True)
 				[string]$programs_running_cfg_nice[$special_programs[$key]]
 			}
 			
+			$xkey.add($key, 0)
+		}
+	}
+	
+	#priority key will be one that does not have idle priority
+	foreach($key in $xkey.Keys){
+		if([string]$programs_running_cfg_nice[$special_programs[$key]] -ne "idle"){
 			break
 		}
 	}
