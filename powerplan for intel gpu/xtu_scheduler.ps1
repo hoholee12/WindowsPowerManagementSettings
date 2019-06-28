@@ -51,6 +51,9 @@ $programs_running_cfg_cpu = @{}
 # index = gpu setting
 $programs_running_cfg_xtu = @{}
 
+# nice settings
+$programs_running_cfg_nice = @{}
+
 
 
 # create config files if not exist
@@ -70,17 +73,30 @@ function checkFiles_myfiles{
 1 = 98
 2 = 100
 3 = 65
-4 = 95"
+4 = 95
+5 = 100"
 
 	checkFiles "programs_running_cfg_xtu"`
 "0 = 6.5
 1 = 5.5
 2 = 4.5
 3 = 7.5
-4 = 7.5"
+4 = 7.5
+5 = 4.5"
+
+	# adjust priority
+	# idle, belownormal, normal, abovenormal, high, realtime
+	checkFiles "programs_running_cfg_nice"`
+"0 = idle
+1 = high
+2 = high
+3 = high
+4 = high
+5 = idle"
 
 	checkFiles "special_programs"`
-"'acad' = 1
+"'steam' = 0
+'acad' = 1
 'launcher' = 1
 'tesv' = 1
 'fsx' = 1
@@ -91,17 +107,18 @@ function checkFiles_myfiles{
 'Project64' = 1
 'ace7game' = 1
 'pcars' = 1
-'cl' = 2
-'link' = 2
 'pcsx2' = 2
 'dolphin' = 2
-'ffmpeg' = 2
-'7z' = 2
 'vmware-vmx' = 2
 'drt' = 3
 'dirtrally2' = 3
 'gta5' = 4
-'gtaiv' = 4"
+'gtaiv' = 4
+'borderlands2' = 4
+'cl' = 5
+'link' = 5
+'ffmpeg' = 5
+'7z' = 5"
 }
 
 checkFiles_myfiles
@@ -144,6 +161,8 @@ findFiles "programs_running_cfg_cpu"
 $programs_running_cfg_cpu = $global:found_hash
 findFiles "programs_running_cfg_xtu"
 $programs_running_cfg_xtu = $global:found_hash
+findFiles "programs_running_cfg_nice"
+$programs_running_cfg_nice = $global:found_hash
 findFiles "special_programs"
 $special_programs = $global:found_hash
 
@@ -187,6 +206,8 @@ while ($True)
 	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_cpu = $global:found_hash }
 	checkSettings "programs_running_cfg_xtu"
 	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_xtu = $global:found_hash }
+	checkSettings "programs_running_cfg_nice"
+	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_nice = $global:found_hash }
 	checkSettings "special_programs"
 	if ($global:isDateDifferent -eq $True) { $special_programs = $global:found_hash }
 	#	init may have been changed
@@ -204,17 +225,21 @@ while ($True)
 			
 			#boost priority!!
 			foreach($boost in $temp){
-				$boost.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::high
+				$boost.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::`
+				[string]$programs_running_cfg_nice[$special_programs[$key]]
 			}
 			
 			break
 		}
 	}
 	
-	$temp = powercfg /query $guid0 $guid1 $guid2
-	$temp = Out-String -InputObject $temp
-	$temp = $temp.SubString($temp.Length - 6, 6).trim()
-	$temp = '{0:d}' -f [int]("0x" + $temp)
+	#temp = name of the process were looking for
+	#temp2 = programs_running_cfg_cpu
+	
+	$temp2 = powercfg /query $guid0 $guid1 $guid2
+	$temp2 = Out-String -InputObject $temp2
+	$temp2 = $temp2.SubString($temp2.Length - 6, 6).trim()
+	$temp2 = '{0:d}' -f [int]("0x" + $temp2)
 	if ($special_programs_running -eq $True)
 	{
 		$cpu = Get-WmiObject -class Win32_Processor
@@ -245,7 +270,7 @@ while ($True)
 		}
 
 		#change power plan
-		elseif ($temp -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
+		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
 		{
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
@@ -261,7 +286,7 @@ while ($True)
 	else
 	{
 		#change back to 'Balanced' if nothings running
-		if ($temp -match $cpu_init -eq $False)
+		if ($temp2 -match $cpu_init -eq $False)
 		{
 			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_init
 			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_init
