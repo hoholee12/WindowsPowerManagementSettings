@@ -74,7 +74,8 @@ function checkFiles_myfiles{
 2 = 100
 3 = 65
 4 = 95
-5 = 100"
+5 = 100
+6 = 84"
 
 	checkFiles "programs_running_cfg_xtu"`
 "0 = 6.5
@@ -82,7 +83,8 @@ function checkFiles_myfiles{
 2 = 4.5
 3 = 7.5
 4 = 7.5
-5 = 4.5"
+5 = 4.5
+6 = 6.5"
 
 	# adjust priority
 	# idle, belownormal, normal, abovenormal, high, realtime
@@ -92,10 +94,19 @@ function checkFiles_myfiles{
 2 = high
 3 = high
 4 = high
-5 = idle"
+5 = idle
+6 = realtime"
 
 	checkFiles "special_programs"`
-"'steam' = 0
+"'jdownloader2' = 0
+'github' = 0
+'steam' = 0
+'origin' = 0
+'mbam' = 0
+'shellexperiencehost' = 0
+'svchost' = 0
+'subprocess' = 0
+'gtavlauncher' = 0
 'acad' = 1
 'launcher' = 1
 'tesv' = 1
@@ -118,7 +129,13 @@ function checkFiles_myfiles{
 'cl' = 5
 'link' = 5
 'ffmpeg' = 5
-'7z' = 5"
+'7z' = 5
+'macsfancontrol' = 6
+'lubbosfancontrol' = 6
+'bootcamp' = 6
+'obs' = 6
+'remoteplay' = 6
+'discord' = 6"
 }
 
 checkFiles_myfiles
@@ -234,6 +251,7 @@ while ($True)
 			
 			$xkey.add($key, 0)
 		}
+		start-sleep -m 20
 	}
 	
 	#priority key will be one that does not have idle priority
@@ -242,6 +260,7 @@ while ($True)
 		[string]$programs_running_cfg_nice[$special_programs[$key]] -ne "belownormal"){
 			break
 		}
+		
 	}
 	
 	#temp = name of the process were looking for
@@ -312,5 +331,5 @@ while ($True)
 
 	}
 
-	sleep $loop_delay
+	start-sleep $loop_delay
 }
