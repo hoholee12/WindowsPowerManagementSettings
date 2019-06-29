@@ -238,7 +238,8 @@ while ($True)
 	
 	#priority key will be one that does not have idle priority
 	foreach($key in $xkey.Keys){
-		if([string]$programs_running_cfg_nice[$special_programs[$key]] -ne "idle"){
+		if([string]$programs_running_cfg_nice[$special_programs[$key]] -ne "idle" -and`
+		[string]$programs_running_cfg_nice[$special_programs[$key]] -ne "belownormal"){
 			break
 		}
 	}
