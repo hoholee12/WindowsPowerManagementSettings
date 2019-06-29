@@ -254,10 +254,12 @@ while ($True)
 		start-sleep -m 20
 	}
 	
-	#priority key will be one that does not have idle priority
+	#idle, belownormal, realtime priority will be regarded as idle processes,
+	#and disregarded powerop when other main processes are also running!
 	foreach($key in $xkey.Keys){
 		if([string]$programs_running_cfg_nice[$special_programs[$key]] -ne "idle" -and`
-		[string]$programs_running_cfg_nice[$special_programs[$key]] -ne "belownormal"){
+		[string]$programs_running_cfg_nice[$special_programs[$key]] -ne "belownormal" -and`
+		[string]$programs_running_cfg_nice[$special_programs[$key]] -ne "realtime"){
 			break
 		}
 		
