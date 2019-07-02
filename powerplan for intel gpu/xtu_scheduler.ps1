@@ -10,7 +10,7 @@
 #config files for adding special_programs, programs_running_cfg_cpu, programs_running_cfg_xtu
 #				YOU CAN EDIT CONFIG REALTIME!!!: its in c:\xtu_scheduler_config\
 
-#reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+#reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 $processor_power_management_guids = @{
 "06cadf0e-64ed-448a-8927-ce7bf90eb35d" = 80			#cpu high threshold; lower this for performance
@@ -213,7 +213,7 @@ xtucli -t -id 59 -v $xtu_init
 $cpu = Get-WmiObject -class Win32_Processor
 $max = $cpu['CurrentClockSpeed']
 
-#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 $sw = 0
 
@@ -246,8 +246,11 @@ while ($True)
 			
 			#boost priority!!
 			foreach($boost in $temp){
+				try{
 				$boost.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::`
 				[string]$programs_running_cfg_nice[$special_programs[$key]]
+				}
+				catch{}
 			}
 			
 			$xkey.add($key, 0)
@@ -285,8 +288,12 @@ while ($True)
 				powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_max
 				powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_max
 				powercfg /setactive $guid0
-				xtucli -t -id 59 -v $xtu_max
+				$xtuproc = start-process xtucli ("-t -id 59 -v "`
+				+ $xtu_max)`
+				-PassThru
+				$xtuproc.PriorityClass = "idle"
 				$sw = 1
+				$loop_delay = 0		#loop immediately
 			}
 			else{
 				powercfg /setdcvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
@@ -295,11 +302,15 @@ while ($True)
 				
 				if ([float]$programs_running_cfg_xtu[$special_programs[$key]] -le [float]$xtu_max)
 				{
-					xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
+					$xtuproc = start-process xtucli ("-t -id 59 -v "`
+					+ $programs_running_cfg_xtu[$special_programs[$key]])`
+					-PassThru
+					$xtuproc.PriorityClass = "idle"
 				}
 				$sw = 0
+				$loop_delay = $loop_delay_backup		#rest a bit
 			}
-			$loop_delay = 0		#loop immediately
+			
 		}
 
 		#change power plan
@@ -311,7 +322,11 @@ while ($True)
 			
 			if ([float]$programs_running_cfg_xtu[$special_programs[$key]] -le [float]$xtu_max)
 			{
-				xtucli -t -id 59 -v $programs_running_cfg_xtu[$special_programs[$key]]
+				$xtuproc = start-process xtucli ("-t -id 59 -v "`
+				+ $programs_running_cfg_xtu[$special_programs[$key]])`
+				-PassThru
+				$xtuproc.PriorityClass = "idle"
+				
 			}
 			$loop_delay = $loop_delay_backup
 		}
@@ -327,7 +342,11 @@ while ($True)
 
 			if ([float]$xtu_init -le [float]$xtu_max)
 			{
-				xtucli -t -id 59 -v $xtu_init
+				$xtuproc = start-process xtucli ("-t -id 59 -v "`
+				+ $xtu_init)`
+				-PassThru
+				$xtuproc.PriorityClass = "idle"
+				
 			}
 			$loop_delay = $loop_delay_backup
 		}
