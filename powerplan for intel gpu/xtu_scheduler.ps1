@@ -324,10 +324,7 @@ while ($True)
 			}
 			
 		}
-		else{
-			checkMaxSpeed
-		}
-
+		
 		#change power plan
 		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
 		{
@@ -335,6 +332,7 @@ while ($True)
 			xtuproc($programs_running_cfg_xtu[$special_programs[$key]])
 				
 			$loop_delay = $loop_delay_backup
+			checkMaxSpeed		# check max speed here
 		}
 	}
 	else
