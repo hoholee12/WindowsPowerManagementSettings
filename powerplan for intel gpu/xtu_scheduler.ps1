@@ -376,10 +376,15 @@ while ($True)
 		#change power plan
 		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
 		{
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
-			+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
-			+ $programs_running_cfg_xtu[$special_programs[$key]])
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			if([int]$special_programs[$key] -eq 0){
+				msg("no known applications running atm...")
+			}
+			else{
+				msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
+				+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
+				+ $programs_running_cfg_xtu[$special_programs[$key]])
+			}
 			
 			cpuproc($programs_running_cfg_cpu[$special_programs[$key]])
 			xtuproc($programs_running_cfg_xtu[$special_programs[$key]])
