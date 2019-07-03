@@ -10,6 +10,33 @@
 #config files for adding special_programs, programs_running_cfg_cpu, programs_running_cfg_xtu
 #				YOU CAN EDIT CONFIG REALTIME!!!: its in c:\xtu_scheduler_config\
 
+#	INITIALIZERS
+# your program = index
+$special_programs = @{}
+
+# find your own handmade powerplans here:
+#  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes
+# index = cpu setting
+$programs_running_cfg_cpu = @{}
+
+# index = gpu setting
+$programs_running_cfg_xtu = @{}
+
+# nice settings
+$programs_running_cfg_nice = @{}
+
+
+# create config files if not exist
+function checkFiles ([string]$setting_string, [string]$value_string){
+	if((Test-Path ("c:\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
+		if((Test-Path "c:\xtu_scheduler_config") -ne $True) {
+		New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory" }
+		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt"`
+		) -ItemType "file" -value $value_string
+	}
+}
+
+
 #reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 $processor_power_management_guids = @{
@@ -26,45 +53,7 @@ $processor_power_management_guids = @{
 "ea062031-0e34-4ff1-9b6d-eb1059334028" = 100
 }
 
-# stuff
-$guid0 = '381b4222-f694-41f0-9685-ff5bb260df2e'		# you can change to any powerplan you want as default!
-$guid1 = '54533251-82be-4824-96c1-47b60b740d00'		# processor power management
-$guid2 = 'bc5038f7-23e0-4960-96da-33abaf5935ec'		# processor high clockspeed limit
 
-
-#loop dat shit
-foreach($temp in $processor_power_management_guids.Keys){
-	powercfg /attributes $guid1 $temp -ATTRIB_HIDE
-	powercfg /setdcvalueindex $guid0 $guid1 $temp $processor_power_management_guids[$temp]
-	powercfg /setacvalueindex $guid0 $guid1 $temp $processor_power_management_guids[$temp]
-}
-powercfg /setactive $guid0
-
-# your program = index
-$special_programs = @{}
-
-# find your own handmade powerplans here:
-#  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes
-# index = cpu setting
-$programs_running_cfg_cpu = @{}
-
-# index = gpu setting
-$programs_running_cfg_xtu = @{}
-
-# nice settings
-$programs_running_cfg_nice = @{}
-
-
-
-# create config files if not exist
-function checkFiles ([string]$setting_string, [string]$value_string){
-	if((Test-Path ("c:\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
-		if((Test-Path "c:\xtu_scheduler_config") -ne $True) {
-		New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory" }
-		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt"`
-		) -ItemType "file" -value $value_string
-	}
-}
 
 # settings file created by default: (0 will be the base clockspeed! key start from 0 and increment by 1)
 function checkFiles_myfiles{
@@ -139,6 +128,29 @@ function checkFiles_myfiles{
 'discord' = 6"
 }
 
+$loop_delay = 5		#seconds
+
+#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+# stuff
+$guid0 = '381b4222-f694-41f0-9685-ff5bb260df2e'		# you can change to any powerplan you want as default!
+$guid1 = '54533251-82be-4824-96c1-47b60b740d00'		# processor power management
+$guid2 = 'bc5038f7-23e0-4960-96da-33abaf5935ec'		# processor high clockspeed limit
+
+
+#loop dat shit
+foreach($temp in $processor_power_management_guids.Keys){
+	powercfg /attributes $guid1 $temp -ATTRIB_HIDE
+	powercfg /setdcvalueindex $guid0 $guid1 $temp $processor_power_management_guids[$temp]
+	powercfg /setacvalueindex $guid0 $guid1 $temp $processor_power_management_guids[$temp]
+}
+powercfg /setactive $guid0
+
+
+$loop_delay_backup = $loop_delay
+
 checkFiles_myfiles
 
 # used for checking whether settings file was modified
@@ -195,26 +207,33 @@ $xtu_init = $programs_running_cfg_xtu['0']
 $xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -index 5} | out-string
 ) -replace "x",'').trim()
 
-$loop_delay = 5		#seconds
 
+function xtuproc($arg0){
+	if ([float]$arg0 -le [float]$xtu_max)
+	{
+		$xtuproc = start-process xtucli ("-t -id 59 -v " + $arg0) -PassThru
+		$xtuproc.PriorityClass = "idle"
+	}
+}
 
-
-
-$loop_delay_backup = $loop_delay
+function cpuproc($arg0){
+	powercfg /setdcvalueindex $guid0 $guid1 $guid2 $arg0
+	powercfg /setacvalueindex $guid0 $guid1 $guid2 $arg0
+	powercfg /setactive $guid0
+}
 
 
 # initial powerplan to whatever guid0 is
 powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_init
 powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_init
 powercfg /setactive $guid0
-xtucli -t -id 59 -v $xtu_init
+xtuproc($xtu_init)
 
 # initial cpu max speed
 $cpu = Get-WmiObject -class Win32_Processor
 $max = $cpu['CurrentClockSpeed']
 
-#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+# switch
 $sw = 0
 
 while ($True)
@@ -285,28 +304,16 @@ while ($True)
 		#it fucks up the baked-in throttling system or whatever the fuck that is... it just works
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And $clock -lt $max){
 			if($sw -eq 0){
-				powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_max
-				powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_max
-				powercfg /setactive $guid0
-				$xtuproc = start-process xtucli ("-t -id 59 -v "`
-				+ $xtu_max)`
-				-PassThru
-				$xtuproc.PriorityClass = "idle"
+				cpuproc($cpu_max)
+				xtuproc($xtu_max)
+				
 				$sw = 1
 				$loop_delay = 0		#loop immediately
 			}
 			else{
-				powercfg /setdcvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
-				powercfg /setacvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
-				powercfg /setactive $guid0
+				cpuproc($programs_running_cfg_cpu[$special_programs[$key]])
+				xtuproc($programs_running_cfg_xtu[$special_programs[$key]])
 				
-				if ([float]$programs_running_cfg_xtu[$special_programs[$key]] -le [float]$xtu_max)
-				{
-					$xtuproc = start-process xtucli ("-t -id 59 -v "`
-					+ $programs_running_cfg_xtu[$special_programs[$key]])`
-					-PassThru
-					$xtuproc.PriorityClass = "idle"
-				}
 				$sw = 0
 				$loop_delay = $loop_delay_backup		#rest a bit
 			}
@@ -316,18 +323,9 @@ while ($True)
 		#change power plan
 		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
 		{
-			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
-			powercfg /setacvalueindex $guid0 $guid1 $guid2 $programs_running_cfg_cpu[$special_programs[$key]]
-			powercfg /setactive $guid0
-			
-			if ([float]$programs_running_cfg_xtu[$special_programs[$key]] -le [float]$xtu_max)
-			{
-				$xtuproc = start-process xtucli ("-t -id 59 -v "`
-				+ $programs_running_cfg_xtu[$special_programs[$key]])`
-				-PassThru
-				$xtuproc.PriorityClass = "idle"
+			cpuproc($programs_running_cfg_cpu[$special_programs[$key]])
+			xtuproc($programs_running_cfg_xtu[$special_programs[$key]])
 				
-			}
 			$loop_delay = $loop_delay_backup
 		}
 	}
@@ -336,18 +334,9 @@ while ($True)
 		#change back to 'Balanced' if nothings running
 		if ($temp2 -match $cpu_init -eq $False)
 		{
-			powercfg /setdcvalueindex $guid0 $guid1 $guid2 $cpu_init
-			powercfg /setacvalueindex $guid0 $guid1 $guid2 $cpu_init
-			powercfg /setactive $guid0
-
-			if ([float]$xtu_init -le [float]$xtu_max)
-			{
-				$xtuproc = start-process xtucli ("-t -id 59 -v "`
-				+ $xtu_init)`
-				-PassThru
-				$xtuproc.PriorityClass = "idle"
-				
-			}
+			cpuproc($cpu_init)
+			xtuproc($xtu_init)
+			
 			$loop_delay = $loop_delay_backup
 		}
 
