@@ -107,13 +107,13 @@ function checkFiles_myfiles{
 'Project64' = 1
 'ace7game' = 1
 'pcars' = 1
+'gtaiv' = 1
 'pcsx2' = 2
 'dolphin' = 2
 'vmware-vmx' = 2
 'drt' = 3
 'dirtrally2' = 3
 'gta5' = 4
-'gtaiv' = 4
 'borderlands2' = 4
 'cl' = 5
 'link' = 5
