@@ -25,20 +25,33 @@ $programs_running_cfg_xtu = @{}
 # nice settings
 $programs_running_cfg_nice = @{}
 
+#logging stuff
+if((Test-Path (".\xtu_scheduler_config\xtu_scheduler.log")) -eq $True){
+	remove-item .\xtu_scheduler_config\xtu_scheduler.log
+}
+function msg ([string]$setting_string){
+	if((Test-Path ".\xtu_scheduler_config") -ne $True) {
+		New-Item -path ".\" -name "xtu_scheduler_config" -ItemType "directory"
+	}
+
+	$setting_string
+	$setting_string >> .\xtu_scheduler_config\xtu_scheduler.log
+}
+
 
 # create config files if not exist
 function checkFiles ([string]$setting_string, [string]$value_string){
-	if((Test-Path ("c:\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
-		if((Test-Path "c:\xtu_scheduler_config") -ne $True) {
-			New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory"
+	if((Test-Path (".\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
+		if((Test-Path ".\xtu_scheduler_config") -ne $True) {
+			New-Item -path ".\" -name "xtu_scheduler_config" -ItemType "directory"
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			("created directory: c:\xtu_scheduler_config")
+			msg("created directory: .\xtu_scheduler_config")
 		}
 		
-		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt"`
+		New-Item -path ".\xtu_scheduler_config" -name ($setting_string + ".txt"`
 		) -ItemType "file" -value $value_string
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		("created file: " + $setting_string + " in c:\xtu_scheduler_config")
+		msg("created file: " + $setting_string + " in .\xtu_scheduler_config")
 	}
 }
 
@@ -167,8 +180,8 @@ $global:isDateDifferent = $False	#flag for findFiles
 
 # find settings file
 function findFiles ($setting_string){
-	$file = Get-Content ("c:\xtu_scheduler_config\" + $setting_string + ".txt")
-	$global:lastModifiedDate.add($setting_string, (Get-Item ("c:\xtu_scheduler_config\"`
+	$file = Get-Content (".\xtu_scheduler_config\" + $setting_string + ".txt")
+	$global:lastModifiedDate.add($setting_string, (Get-Item (".\xtu_scheduler_config\"`
 	+ $setting_string + ".txt")).LastWriteTime)
 	if ($? -eq $True)
 	{
@@ -182,7 +195,7 @@ function findFiles ($setting_string){
 }
 
 function checkSettings ($setting_string){
-	$currentModifiedDate = (Get-Item ("c:\xtu_scheduler_config\" + $setting_string + ".txt"`
+	$currentModifiedDate = (Get-Item (".\xtu_scheduler_config\" + $setting_string + ".txt"`
 	)).LastWriteTime
 	if($global:lastModifiedDate[$setting_string] -ne $currentModifiedDate){
 		$global:isDateDifferent = $True
@@ -215,13 +228,13 @@ $xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -in
 ) -replace "x",'').trim()
 
 
-#print information
-("xtu_scheduler initial information:")
-("special_programs count: " + $special_programs.Count)
-("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
-("cpu_init: " + $cpu_init + ", cpu_max: " + $cpu_max)
-("xtu_init: " + $xtu_init + ", xtu_max: " + $xtu_max)
-("loop_delay: " + $loop_delay)
+#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+msg(" **** xtu_scheduler initial information ****")
+msg("special_programs count: " + $special_programs.Count)
+msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
+msg("cpu_init: " + $cpu_init + ", cpu_max: " + $cpu_max)
+msg("xtu_init: " + $xtu_init + ", xtu_max: " + $xtu_max)
+msg("loop_delay: " + $loop_delay)
 
 function xtuproc($arg0){
 	if ([float]$arg0 -le [float]$xtu_max)
@@ -241,7 +254,8 @@ function cpuproc($arg0){
 # initial powerplan to whatever guid0 is
 cpuproc($cpu_init)
 xtuproc($xtu_init)
-
+#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+msg("initial settings applied - cpuproc: " + $cpu_init + ", xtuproc: " + $xtu_init)
 
 
 # initial cpu max speed
@@ -340,7 +354,7 @@ while ($True)
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And $clock -lt $global:max){
 			
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			("o shit its throttling, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
+			msg("o shit its throttling, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
 		
 			if($sw -eq 0){
 				cpuproc($cpu_max)
@@ -363,7 +377,7 @@ while ($True)
 		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
 		{
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			("current powersettings followed by: " + $key + ", setcpuspeed: "`
+			msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
 			+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
 			+ $programs_running_cfg_xtu[$special_programs[$key]])
 			
@@ -380,7 +394,7 @@ while ($True)
 		if ($temp2 -match $cpu_init -eq $False)
 		{
 			#print information<<<<<<<<<<<<<<<<<<<<<<
-			("no known applications running atm...")
+			msg("no known applications running atm...")
 		
 			cpuproc($cpu_init)
 			xtuproc($xtu_init)
