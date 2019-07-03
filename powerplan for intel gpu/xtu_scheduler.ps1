@@ -82,7 +82,7 @@ function checkFiles_myfiles{
 1 = 5.5
 2 = 4.5
 3 = 7.5
-4 = 7.5
+4 = 6.5
 5 = 4.5
 6 = 6.5"
 
