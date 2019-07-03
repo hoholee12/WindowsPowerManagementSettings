@@ -344,6 +344,7 @@ while ($True)
 			xtuproc($xtu_init)
 			
 			$loop_delay = $loop_delay_backup
+			checkMaxSpeed		# check max speed here
 		}
 
 	}
