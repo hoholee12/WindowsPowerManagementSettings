@@ -30,14 +30,20 @@ $programs_running_cfg_nice = @{}
 function checkFiles ([string]$setting_string, [string]$value_string){
 	if((Test-Path ("c:\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
 		if((Test-Path "c:\xtu_scheduler_config") -ne $True) {
-		New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory" }
+			New-Item -path "c:\" -name "xtu_scheduler_config" -ItemType "directory"
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			("created directory: c:\xtu_scheduler_config")
+		}
+		
 		New-Item -path "c:\xtu_scheduler_config" -name ($setting_string + ".txt"`
 		) -ItemType "file" -value $value_string
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		("created file: " + $setting_string + " in c:\xtu_scheduler_config")
 	}
 }
 
 
-#reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+#reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 $processor_power_management_guids = @{
 "06cadf0e-64ed-448a-8927-ce7bf90eb35d" = 80			# processor high threshold; lower this for performance
@@ -130,7 +136,7 @@ function checkFiles_myfiles{
 
 $loop_delay = 5		#seconds
 
-#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -209,6 +215,14 @@ $xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -in
 ) -replace "x",'').trim()
 
 
+#print information
+("xtu_scheduler initial information:")
+("special_programs count: " + $special_programs.Count)
+("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
+("cpu_init: " + $cpu_init + ", cpu_max: " + $cpu_max)
+("xtu_init: " + $xtu_init + ", xtu_max: " + $xtu_max)
+("loop_delay: " + $loop_delay)
+
 function xtuproc($arg0){
 	if ([float]$arg0 -le [float]$xtu_max)
 	{
@@ -284,14 +298,30 @@ while ($True)
 	
 	#idle, belownormal, realtime priority will be regarded as idle processes,
 	#and disregarded powerop when other main processes are also running!
+	$maxcpukey = ""
+	$maxcpuratio = 0
+	
 	foreach($key in $xkey.Keys){
+		#if normal, above normal, high... get key and break loop
 		if([string]$programs_running_cfg_nice[$special_programs[$key]] -ne "idle" -and`
 		[string]$programs_running_cfg_nice[$special_programs[$key]] -ne "belownormal" -and`
 		[string]$programs_running_cfg_nice[$special_programs[$key]] -ne "realtime"){
+			$maxcpukey = $key
 			break
 		}
 		
+		#if idle, belownormal, realtime.. get the key with the highest cpu ratio
+		else{
+			if([int]$programs_running_cfg_cpu[$special_programs[$key]] -gt [int]$maxcpuratio){
+				$maxcpukey = $key
+				$maxcpuratio = $programs_running_cfg_cpu[$special_programs[$key]]
+			}
+		
+		}
+		
 	}
+	$key = $maxcpukey
+	
 	
 	#temp = name of the process were looking for
 	#temp2 = programs_running_cfg_cpu
@@ -308,6 +338,10 @@ while ($True)
 		#if throttling has kicked in, set everything to max clockspeed for a brief time
 		#it fucks up the baked-in throttling system or whatever the fuck that is... it just works
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And $clock -lt $global:max){
+			
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			("o shit its throttling, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
+		
 			if($sw -eq 0){
 				cpuproc($cpu_max)
 				xtuproc($xtu_max)
@@ -328,6 +362,11 @@ while ($True)
 		#change power plan
 		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
 		{
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			("current powersettings followed by: " + $key + ", setcpuspeed: "`
+			+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
+			+ $programs_running_cfg_xtu[$special_programs[$key]])
+			
 			cpuproc($programs_running_cfg_cpu[$special_programs[$key]])
 			xtuproc($programs_running_cfg_xtu[$special_programs[$key]])
 				
@@ -340,6 +379,9 @@ while ($True)
 		#change back to 'Balanced' if nothings running
 		if ($temp2 -match $cpu_init -eq $False)
 		{
+			#print information<<<<<<<<<<<<<<<<<<<<<<
+			("no known applications running atm...")
+		
 			cpuproc($cpu_init)
 			xtuproc($xtu_init)
 			
