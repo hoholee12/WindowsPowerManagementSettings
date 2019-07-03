@@ -77,22 +77,22 @@ $processor_power_management_guids = @{
 # settings file created by default: (0 will be the base clockspeed! key start from 0 and increment by 1)
 function checkFiles_myfiles{
 	checkFiles "programs_running_cfg_cpu"`
-"0 = 84
+"0 = 65
 1 = 98
 2 = 100
 3 = 65
 4 = 95
 5 = 100
-6 = 84"
+6 = 65"
 
 	checkFiles "programs_running_cfg_xtu"`
-"0 = 6.5
+"0 = 7.5
 1 = 5.5
 2 = 4.5
 3 = 7.5
 4 = 6.5
 5 = 4.5
-6 = 6.5"
+6 = 7.5"
 
 	# adjust priority
 	# idle, belownormal, normal, abovenormal, high, realtime
@@ -200,6 +200,9 @@ function checkSettings ($setting_string){
 	if($global:lastModifiedDate[$setting_string] -ne $currentModifiedDate){
 		$global:isDateDifferent = $True
 		$global:lastModifiedDate.Remove($setting_string)
+		
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		msg($setting_string + " has been modified, reloading...")
 		findFiles $setting_string
 	}
 	else{
@@ -234,6 +237,10 @@ msg("special_programs count: " + $special_programs.Count)
 msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
 msg("cpu_init: " + $cpu_init + ", cpu_max: " + $cpu_max)
 msg("xtu_init: " + $xtu_init + ", xtu_max: " + $xtu_max)
+if([float]$xtu_init -ge [float] $xtu_max){
+	msg("xtu settings may have been altered, check your gpu settings and restart this program.")
+	msg("xtu settings may not be applied properly, or at all.")
+}
 msg("loop_delay: " + $loop_delay)
 
 function xtuproc($arg0){
