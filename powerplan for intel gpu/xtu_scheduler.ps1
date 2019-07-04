@@ -207,7 +207,7 @@ function checkSettings ($setting_string){
 		msg($setting_string + " has been modified, reloading...")
 		
 		findFiles $setting_string
-		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("special_programs count: " + $special_programs.Count)
 		msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
 	}
@@ -233,7 +233,7 @@ $xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -in
 ) -replace "x",'').trim()
 
 
-#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 msg(" **** xtu_scheduler initial information ****")
 msg("special_programs count: " + $special_programs.Count)
 msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
@@ -263,8 +263,8 @@ function cpuproc($arg0){
 # initial powerplan to whatever guid0 is
 cpuproc($cpu_init)
 xtuproc($xtu_init)
-#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-msg("initial settings applied - cpuproc: " + $cpu_init + ", xtuproc: " + $xtu_init)
+#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+msg("initial settings applied - cpu_init: " + $cpu_init + ", xtu_init: " + $xtu_init)
 
 
 # initial cpu max speed
@@ -358,8 +358,8 @@ while ($True)
 		#it fucks up the baked-in throttling system or whatever the fuck that is... it just works
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And $clock -lt $global:max){
 			
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("o shit its throttling, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
 		
 			if($sw -eq 0){
 				cpuproc($cpu_max)
@@ -383,7 +383,7 @@ while ($True)
 		{
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			if([int]$special_programs[$key] -eq 0){
-				msg("no known applications running atm... back to init")
+				msg("fakeinit: no known applications running atm... back to init")
 			}
 			else{
 				msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
@@ -397,15 +397,17 @@ while ($True)
 			$loop_delay = $loop_delay_backup
 			checkMaxSpeed		# check max speed here
 		}
+
 	}
 	else
 	{
+	
 		#change back to 'Balanced' if nothings running
 		if ($temp2 -match $cpu_init -eq $False)
 		{
-			#print information<<<<<<<<<<<<<<<<<<<<<<
-			msg("no known applications running atm... back to init")
-		
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			msg("external: no known applications running atm... back to init")
+			
 			cpuproc($cpu_init)
 			xtuproc($xtu_init)
 			
