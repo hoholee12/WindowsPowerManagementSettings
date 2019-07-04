@@ -12,18 +12,18 @@
 
 #	INITIALIZERS
 # your program = index
-$special_programs = @{}
+$global:special_programs = @{}
 
 # find your own handmade powerplans here:
 #  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes
 # index = cpu setting
-$programs_running_cfg_cpu = @{}
+$global:programs_running_cfg_cpu = @{}
 
 # index = gpu setting
-$programs_running_cfg_xtu = @{}
+$global:programs_running_cfg_xtu = @{}
 
 # nice settings
-$programs_running_cfg_nice = @{}
+$global:programs_running_cfg_nice = @{}
 
 #logging stuff
 if((Test-Path (".\xtu_scheduler_config\xtu_scheduler.log")) -eq $True){
@@ -191,6 +191,8 @@ function findFiles ($setting_string){
 			$global:found_hash.add($line.split("=")[0].trim("'", " "),`
 			$line.split("=")[1].trim("'", " "))
 		}
+		# equivalent to 'eval'
+		set-variable ("global:" + $setting_string) $global:found_hash
 	}
 }
 
@@ -203,7 +205,11 @@ function checkSettings ($setting_string){
 		
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg($setting_string + " has been modified, reloading...")
+		
 		findFiles $setting_string
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		msg("special_programs count: " + $special_programs.Count)
+		msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
 	}
 	else{
 		$global:isDateDifferent = $False
@@ -211,13 +217,9 @@ function checkSettings ($setting_string){
 }
 
 findFiles "programs_running_cfg_cpu"
-$programs_running_cfg_cpu = $global:found_hash
 findFiles "programs_running_cfg_xtu"
-$programs_running_cfg_xtu = $global:found_hash
 findFiles "programs_running_cfg_nice"
-$programs_running_cfg_nice = $global:found_hash
 findFiles "special_programs"
-$special_programs = $global:found_hash
 
 
 # initial cpu setting
@@ -237,7 +239,7 @@ msg("special_programs count: " + $special_programs.Count)
 msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
 msg("cpu_init: " + $cpu_init + ", cpu_max: " + $cpu_max)
 msg("xtu_init: " + $xtu_init + ", xtu_max: " + $xtu_max)
-if([float]$xtu_init -ge [float] $xtu_max){
+if([float]$xtu_init -gt [float] $xtu_max){
 	msg("xtu settings may have been altered, check your gpu settings and restart this program.")
 	msg("xtu settings may not be applied properly, or at all.")
 }
@@ -280,13 +282,9 @@ while ($True)
 {
 	checkFiles_myfiles
 	checkSettings "programs_running_cfg_cpu"
-	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_cpu = $global:found_hash }
 	checkSettings "programs_running_cfg_xtu"
-	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_xtu = $global:found_hash }
 	checkSettings "programs_running_cfg_nice"
-	if ($global:isDateDifferent -eq $True) { $programs_running_cfg_nice = $global:found_hash }
 	checkSettings "special_programs"
-	if ($global:isDateDifferent -eq $True) { $special_programs = $global:found_hash }
 	#	init may have been changed
 	$cpu_init = $programs_running_cfg_cpu['0']
 	$xtu_init = $programs_running_cfg_xtu['0']
@@ -385,7 +383,7 @@ while ($True)
 		{
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			if([int]$special_programs[$key] -eq 0){
-				msg("no known applications running atm...")
+				msg("no known applications running atm... back to init")
 			}
 			else{
 				msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
@@ -406,7 +404,7 @@ while ($True)
 		if ($temp2 -match $cpu_init -eq $False)
 		{
 			#print information<<<<<<<<<<<<<<<<<<<<<<
-			msg("no known applications running atm...")
+			msg("no known applications running atm... back to init")
 		
 			cpuproc($cpu_init)
 			xtuproc($xtu_init)
