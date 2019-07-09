@@ -356,7 +356,8 @@ while ($True)
 		$clock = $cpu['CurrentClockSpeed']
 		#if throttling has kicked in, set everything to max clockspeed for a brief time
 		#it fucks up the baked-in throttling system or whatever the fuck that is... it just works
-		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And $clock -lt $global:max){
+		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+		([int]$clock / 100) -lt ([int]$global:max / 100)){		#2700mhz == 2701mhz, lets make it simpler
 			
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
