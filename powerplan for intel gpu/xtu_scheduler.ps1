@@ -160,6 +160,11 @@ $guid1 = '54533251-82be-4824-96c1-47b60b740d00'		# processor power management
 $guid2 = 'bc5038f7-23e0-4960-96da-33abaf5935ec'		# processor high clockspeed limit
 $guid3 = '893dee8e-2bef-41e0-89c6-b55d0929964c'		# processor low clockspeed limit
 
+$guid4 = '44f3beca-a7c0-460e-9df2-bb8b99e0cba6'		# intel graphics power management
+$guid5 = '3619c3f2-afb2-4afc-b0e9-e7fef372de36'		# submenu of intel graphics power management
+#intel graphics settings
+#	1 = Balanced(Maximum Battery Life is useless)
+#	2 = Maximum Performance(seems to remove long term throttling...)
 
 #loop dat shit
 foreach($temp in $processor_power_management_guids.Keys){
@@ -167,6 +172,8 @@ foreach($temp in $processor_power_management_guids.Keys){
 	powercfg /setdcvalueindex $guid0 $guid1 $temp $processor_power_management_guids[$temp]
 	powercfg /setacvalueindex $guid0 $guid1 $temp $processor_power_management_guids[$temp]
 }
+powercfg /attributes $guid4 $guid5 -ATTRIB_HIDE
+# apply settings
 powercfg /setactive $guid0
 
 
@@ -254,16 +261,23 @@ function xtuproc($arg0){
 	}
 }
 
-function cpuproc($arg0){
+function cpuproc($arg0, $arg1){
 	powercfg /setdcvalueindex $guid0 $guid1 $guid2 $arg0
 	powercfg /setacvalueindex $guid0 $guid1 $guid2 $arg0
+	#intel graphics settings
+	#	1 = Balanced
+	#	2 = Maximum Performance
+	# intel graphics
+	powercfg /setdcvalueindex $guid0 $guid4 $guid5 $arg1
+	powercfg /setacvalueindex $guid0 $guid4 $guid5 $arg1
+	# apply settings
 	powercfg /setactive $guid0
 }
 
 
 # initial powerplan to whatever guid0 is
-cpuproc($cpu_init)
-xtuproc($xtu_init)
+cpuproc $cpu_init 1
+xtuproc $xtu_init
 #print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 msg("initial settings applied - cpu_init: " + $cpu_init + ", xtu_init: " + $xtu_init)
 
@@ -355,7 +369,7 @@ while ($True)
 		$cpu = Get-WmiObject -class Win32_Processor
 		$load = $cpu['LoadPercentage']
 		$clock = $cpu['CurrentClockSpeed']
-		#if throttling has kicked in, set everything to max clockspeed for a brief time
+		#if throttling has kicked in, set everything to init clockspeed for a brief time
 		#it fucks up the baked-in throttling system or whatever the fuck that is... it just works
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
 		[int]$clock -lt [int]$global:max){		#2700mhz != 2701mhz, might be a turboboost clock
@@ -364,15 +378,15 @@ while ($True)
 			msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
 		
 			if($sw -eq 0){
-				cpuproc($cpu_max)
-				xtuproc($xtu_max)
+				cpuproc $cpu_init 1
+				xtuproc $xtu_init
 				
 				$sw = 1
 				$loop_delay = 0		#loop immediately
 			}
 			else{
-				cpuproc($programs_running_cfg_cpu[$special_programs[$key]])
-				xtuproc($programs_running_cfg_xtu[$special_programs[$key]])
+				cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
+				xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 				
 				$sw = 0
 				$loop_delay = $loop_delay_backup		#rest a bit
@@ -386,15 +400,18 @@ while ($True)
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			if([int]$special_programs[$key] -eq 0){
 				msg("fakeinit: no known applications running atm... back to init")
+				
+				cpuproc $cpu_init 1
+				xtuproc $xtu_init
 			}
 			else{
 				msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
 				+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
 				+ $programs_running_cfg_xtu[$special_programs[$key]])
+				
+				cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
+				xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 			}
-			
-			cpuproc($programs_running_cfg_cpu[$special_programs[$key]])
-			xtuproc($programs_running_cfg_xtu[$special_programs[$key]])
 				
 			$loop_delay = $loop_delay_backup
 			checkMaxSpeed		# check max speed here
@@ -410,8 +427,8 @@ while ($True)
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			msg("external: no known applications running atm... back to init")
 			
-			cpuproc($cpu_init)
-			xtuproc($xtu_init)
+			cpuproc $cpu_init 1
+			xtuproc $xtu_init
 			
 			$loop_delay = $loop_delay_backup
 			checkMaxSpeed		# check max speed here
