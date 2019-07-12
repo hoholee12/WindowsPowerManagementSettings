@@ -130,8 +130,10 @@ function checkFiles_myfiles{
 'pcsx2' = 2
 'dolphin' = 2
 'vmware-vmx' = 2
+'dosbox' = 2
 'drt' = 3
 'dirtrally2' = 3
+'chrome' = 3
 'gta5' = 4
 'borderlands2' = 4
 'cl' = 5
