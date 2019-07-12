@@ -139,6 +139,7 @@ function checkFiles_myfiles{
 'ffmpeg' = 5
 '7z' = 5
 'bandizip' = 5
+'handbrake' = 5
 'macsfancontrol' = 6
 'lubbosfancontrol' = 6
 'bootcamp' = 6
