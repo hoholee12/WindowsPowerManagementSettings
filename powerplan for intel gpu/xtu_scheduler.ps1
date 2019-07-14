@@ -133,7 +133,6 @@ function checkFiles_myfiles{
 'dosbox' = 2
 'drt' = 3
 'dirtrally2' = 3
-'chrome' = 3
 'gta5' = 4
 'borderlands2' = 4
 'cl' = 5
@@ -286,6 +285,7 @@ msg("initial settings applied - cpu_init: " + $cpu_init + ", xtu_init: " + $xtu_
 
 # initial cpu max speed
 function checkMaxSpeed(){
+
 	$cpu = Get-WmiObject -class Win32_Processor
 	$global:max = $cpu['CurrentClockSpeed']
 }
@@ -293,7 +293,8 @@ function checkMaxSpeed(){
 checkMaxSpeed
 
 # switch
-$sw = 0
+$global:sw1 = 0
+$global:sw2 = 0
 
 while ($True)
 {
@@ -306,6 +307,14 @@ while ($True)
 	$cpu_init = $programs_running_cfg_cpu['0']
 	$xtu_init = $programs_running_cfg_xtu['0']
 	
+	
+	#check if theres enough profile
+	if($special_programs.Count -le 2){
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		msg("not enough profiles on 'special_programs'. at least 3 is required")
+		start-sleep $loop_delay
+		continue
+	}
 	
 	$special_programs_running = $False
 	# there may be multiple target apps open. make a list of keys that fit the desc
@@ -360,74 +369,83 @@ while ($True)
 	
 	
 	#temp = name of the process were looking for
-	#temp2 = programs_running_cfg_cpu
+	#temp2 = value of 'programs_running_cfg_cpu'
 	
 	$temp2 = powercfg /query $guid0 $guid1 $guid2
 	$temp2 = Out-String -InputObject $temp2
 	$temp2 = $temp2.SubString($temp2.Length - 6, 6).trim()
 	$temp2 = '{0:d}' -f [int]("0x" + $temp2)
-	if ($special_programs_running -eq $True)
-	{
-		$cpu = Get-WmiObject -class Win32_Processor
-		$load = $cpu['LoadPercentage']
-		$clock = $cpu['CurrentClockSpeed']
-		#if throttling has kicked in, set everything to init clockspeed for a brief time
-		#it fucks up the baked-in throttling system or whatever the fuck that is... it just works
-		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
-		[int]$clock -lt [int]$global:max){		#2700mhz != 2701mhz, might be a turboboost clock
-			
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
+	
+	#check cpu load, clock
+	$cpu = Get-WmiObject -class Win32_Processor
+	$load = $cpu['LoadPercentage']
+	$clock = $cpu['CurrentClockSpeed']
+	
+	
+	#if throttling has kicked in, set everything to init clockspeed for a brief time
+	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+	[int]$clock -lt [int]$global:max -And $global:sw1 -eq 0){	#2700mhz != 2701mhz, might be a turboboost clock
+
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
+	
+		cpuproc $cpu_init 1
+		xtuproc $xtu_init
 		
-			if($sw -eq 0){
-				cpuproc $cpu_init 1
-				xtuproc $xtu_init
-				
-				$sw = 1
-				$loop_delay = 0		#loop immediately
-			}
-			else{
-				cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
-				xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
-				
-				$sw = 0
-				$loop_delay = $loop_delay_backup		#rest a bit
-			}
+		$global:sw1 = 1
+	}
+	
+	#reset after boost
+	# no need to check cpuload here
+	elseif ([int]$clock -ge [int]$global:max -And $global:sw1 -eq 1){
+	
+		cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
+		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
+		
+		$global:sw1 = 0
+		checkMaxSpeed		# check max speed here
+	}
+	
+	#if init settings as default...
+	#there may be multiple init entries with different priority settings.
+	elseif($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True){
+	
+		#copied from throttling code
+		#
+		#might be unconfigured game. apply Maximum Performance on graphics settings for a brief time
+		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+		$global:sw2 -eq 0){
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			msg("setting graphics to max perf, possibly a light game...?")
 			
+			cpuproc $cpu_init 2
+			$global:sw2 = 1
 		}
 		
-		#change power plan
-		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False)
-		{
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			if([int]$special_programs[$key] -eq 0){
-				msg("fakeinit: no known applications running atm... back to init")
-				
-				cpuproc $cpu_init 1
-				xtuproc $xtu_init
-			}
-			else{
-				msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
-				+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
-				+ $programs_running_cfg_xtu[$special_programs[$key]])
-				
-				cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
-				xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
-			}
-				
-			$loop_delay = $loop_delay_backup
+		#reset after boost
+		elseif ($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+		$global:sw2 -eq 1){
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			msg("lightgme: no known applications running atm... back to init")
+		
+			cpuproc $cpu_init 1
+			$global:sw2 = 0
 			checkMaxSpeed		# check max speed here
 		}
-
-	}
-	else
-	{
-	
-		#change back to 'Balanced' if nothings running
-		if ($temp2 -match $cpu_init -eq $False)
-		{
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("external: no known applications running atm... back to init")
+		
+		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And`
+			$global:sw2 -eq 0){		#if boost is waiting, this must not happen.
+			
+			#if special program is running...
+			if ($special_programs_running -eq $True)
+			{
+				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+				msg("fakeinit: no known applications running atm... back to init")
+			}
+			else{
+				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+				msg("external: no known applications running atm... back to init")
+			}
 			
 			cpuproc $cpu_init 1
 			xtuproc $xtu_init
@@ -435,9 +453,27 @@ while ($True)
 			$loop_delay = $loop_delay_backup
 			checkMaxSpeed		# check max speed here
 		}
-
+		
+		
 	}
+	
+	#if its not init settings...
+	else{
+	
+		if ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False){
+			msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
+			+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
+			+ $programs_running_cfg_xtu[$special_programs[$key]])
+			
+			cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
+			xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
+			
+				
+			$loop_delay = $loop_delay_backup
+			checkMaxSpeed		# check max speed here
 
+		}
+	}
 	
 	start-sleep $loop_delay
 }
