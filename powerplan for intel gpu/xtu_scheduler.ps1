@@ -408,7 +408,7 @@ while ($True)
 	
 	#if init settings as default...
 	#there may be multiple init entries with different priority settings.
-	elseif($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True){
+	elseif($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True -And $global:sw1 -eq 0){
 	
 		#copied from throttling code
 		#
@@ -458,7 +458,7 @@ while ($True)
 	}
 	
 	#if its not init settings...
-	else{
+	elseif ($global:sw1 -eq 0){
 	
 		if ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False){
 			msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
