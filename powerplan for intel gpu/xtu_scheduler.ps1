@@ -389,7 +389,7 @@ while ($True)
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
 	
-		cpuproc $cpu_init 1
+		cpuproc $cpu_init 2
 		xtuproc $xtu_init
 		
 		$global:sw1 = 1
@@ -397,7 +397,7 @@ while ($True)
 	
 	#reset after boost
 	# no need to check cpuload here
-	elseif ([int]$clock -ge [int]$global:max -And $global:sw1 -eq 1){
+	elseif ([int]$clock -eq [int]$global:max -And $global:sw1 -eq 1){
 	
 		cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
@@ -458,21 +458,18 @@ while ($True)
 	}
 	
 	#if its not init settings...
-	elseif ($global:sw1 -eq 0){
-	
-		if ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False){
-			msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
-			+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
-			+ $programs_running_cfg_xtu[$special_programs[$key]])
-			
-			cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
-			xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
-			
-				
-			$loop_delay = $loop_delay_backup
-			checkMaxSpeed		# check max speed here
+	elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And $global:sw1 -eq 0){
 
-		}
+		msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
+		+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
+		+ $programs_running_cfg_xtu[$special_programs[$key]])
+		
+		cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
+		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
+		
+			
+		$loop_delay = $loop_delay_backup
+		checkMaxSpeed		# check max speed here
 	}
 	
 	start-sleep $loop_delay
