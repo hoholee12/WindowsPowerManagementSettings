@@ -34,6 +34,8 @@ function msg ([string]$setting_string){
 		New-Item -path ".\" -name "xtu_scheduler_config" -ItemType "directory"
 	}
 
+	#print by date and time
+	$setting_string = ((get-date -format "yy:mm:dd:hh:mm:ss: ") + $setting_string)
 	$setting_string
 	$setting_string >> .\xtu_scheduler_config\xtu_scheduler.log
 }
