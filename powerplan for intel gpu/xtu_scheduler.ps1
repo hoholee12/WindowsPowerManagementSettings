@@ -56,7 +56,7 @@ function checkFiles ([string]$setting_string, [string]$value_string){
 }
 
 
-#reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+#reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 $processor_power_management_guids = @{
 "06cadf0e-64ed-448a-8927-ce7bf90eb35d" = 80			# processor high threshold; lower this for performance
@@ -133,8 +133,11 @@ function checkFiles_myfiles{
 'dosbox' = 2
 'drt' = 3
 'dirtrally2' = 3
+'tombraider' = 3
 'gta5' = 4
 'borderlands2' = 4
+'katamari' = 4
+'rottr' = 4
 'cl' = 5
 'link' = 5
 'ffmpeg' = 5
@@ -151,7 +154,7 @@ function checkFiles_myfiles{
 
 $loop_delay = 5		#seconds
 
-#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -382,15 +385,14 @@ while ($True)
 	$clock = $cpu['CurrentClockSpeed']
 	
 	
-	#if throttling has kicked in, set everything to init clockspeed for a brief time
+	#if throttling has kicked in, boost gpu clockspeed for a brief time
 	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
 	[int]$clock -lt [int]$global:max -And $global:sw1 -eq 0){	#2700mhz != 2701mhz, might be a turboboost clock
 
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
 	
-		cpuproc $cpu_init 2
-		xtuproc $xtu_init
+		xtuproc $xtu_max
 		
 		$global:sw1 = 1
 	}
@@ -399,7 +401,6 @@ while ($True)
 	# no need to check cpuload here
 	elseif ([int]$clock -eq [int]$global:max -And $global:sw1 -eq 1){
 	
-		cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 		
 		$global:sw1 = 0
@@ -413,6 +414,7 @@ while ($True)
 		#copied from throttling code
 		#
 		#might be unconfigured game. apply Maximum Performance on graphics settings for a brief time
+		# upper bound is 80
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
 		$global:sw2 -eq 0){
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -423,7 +425,8 @@ while ($True)
 		}
 		
 		#reset after boost
-		elseif ($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+		# lower bound is 50
+		elseif ($load -le $processor_power_management_guids['12a0ab44-fe28-4fa9-b3bd-4b64f44960a6'] -And`
 		$global:sw2 -eq 1){
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			msg("lightgme: no known applications running atm... back to init")
@@ -459,7 +462,7 @@ while ($True)
 	
 	#if its not init settings...
 	elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And $global:sw1 -eq 0){
-
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
 		+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
 		+ $programs_running_cfg_xtu[$special_programs[$key]])
