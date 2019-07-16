@@ -401,7 +401,7 @@ while ($True)
 	
 	#reset after boost
 	# no need to check cpuload here
-	elseif ([int]$clock -eq [int]$global:max -And $global:sw1 -eq 1){
+	elseif ($global:sw1 -eq 1){
 	
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 		
@@ -458,8 +458,7 @@ while ($True)
 			$loop_delay = $loop_delay_backup
 			checkMaxSpeed		# check max speed here
 		}
-		
-		
+	
 	}
 	
 	#if its not init settings...
@@ -471,8 +470,7 @@ while ($True)
 		
 		cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
-		
-			
+
 		$loop_delay = $loop_delay_backup
 		checkMaxSpeed		# check max speed here
 	}
