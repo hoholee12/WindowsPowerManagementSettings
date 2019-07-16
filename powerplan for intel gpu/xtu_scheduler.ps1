@@ -122,13 +122,12 @@ function checkFiles_myfiles{
 'tesv' = 1
 'fsx' = 1
 'Journey' = 1
-'ppsspp' = 1
 'nullDC' = 1
 'pcsxr' = 1
+'ppsspp' = 1
 'Project64' = 1
 'ace7game' = 1
 'pcars' = 1
-'gtaiv' = 1
 'pcsx2' = 2
 'dolphin' = 2
 'vmware-vmx' = 2
@@ -140,6 +139,7 @@ function checkFiles_myfiles{
 'borderlands2' = 4
 'katamari' = 4
 'rottr' = 4
+'gtaiv' = 4
 'cl' = 5
 'link' = 5
 'ffmpeg' = 5
@@ -154,7 +154,12 @@ function checkFiles_myfiles{
 'discord' = 6"
 }
 
-$loop_delay = 5		#seconds
+$loop_delay = 5				#seconds
+$boost_cycle_delay = 36		#minimum cycle delay before reset:
+							#	boost_cycle_delay * loop_delay = minimum seconds before reset
+							#
+							#	longer delay => less throttling
+							#	shorter delay => more battery life
 
 #Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -301,6 +306,9 @@ checkMaxSpeed
 $global:sw1 = 0
 $global:sw2 = 0
 
+# minimum cycle delay before reset
+$global:cycle = 0
+
 while ($True)
 {
 	checkFiles_myfiles
@@ -424,6 +432,15 @@ while ($True)
 			
 			cpuproc $cpu_init 2
 			$global:sw2 = 1
+			$global:cycle = $boost_cycle_delay
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			msg("wait " + ($global:cycle * $loop_delay) + "seconds(s)")
+		}
+		
+		#minimum cycle delay before reset
+		elseif ([int]$global:cycle -gt 0 -And $global:sw2 -eq 1){
+		
+			$global:cycle--
 		}
 		
 		#reset after boost
