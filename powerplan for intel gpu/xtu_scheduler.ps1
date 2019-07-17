@@ -434,7 +434,7 @@ while ($True)
 			$global:sw2 = 1
 			$global:cycle = $boost_cycle_delay
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("wait " + ($global:cycle * $loop_delay) + "seconds(s)")
+			msg("wait " + ($global:cycle * $loop_delay) + "second(s)")
 		}
 		
 		#minimum cycle delay before reset
