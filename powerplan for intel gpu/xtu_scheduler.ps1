@@ -155,7 +155,7 @@ function checkFiles_myfiles{
 }
 
 $loop_delay = 5				#seconds
-$boost_cycle_delay = 300	#minimum cycle delay before reset:
+$boost_cycle_delay = 100	#minimum cycle delay before reset:
 							#	boost_cycle_delay * loop_delay = minimum seconds before reset
 							#
 							#	longer delay => less throttling
@@ -397,7 +397,8 @@ while ($True)
 	
 	#if throttling has kicked in, boost gpu clockspeed for a brief time
 	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
-	[int]$clock -lt [int]$global:max -And $global:sw1 -eq 0){	#2700mhz != 2701mhz, might be a turboboost clock
+	[int]$clock -lt [int]$global:max -And`		#2700mhz != 2701mhz, might be a turboboost clock
+	$global:sw1 -eq 0){
 
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
@@ -419,13 +420,15 @@ while ($True)
 	
 	#if init settings as default...
 	#there may be multiple init entries with different priority settings.
-	elseif($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True -And $global:sw1 -eq 0){
+	elseif($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True -And`
+	$global:sw1 -eq 0){
 	
 		#copied from throttling code
 		#
 		#might be unconfigured game. apply Maximum Performance on graphics settings for a brief time
 		# upper bound is 80
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+		[int]$clock -eq [int]$global:max -And`		#one more check to ensure when to boost
 		$global:sw2 -eq 0){
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			msg("setting graphics to max perf, possibly a light game...?")
@@ -438,7 +441,8 @@ while ($True)
 		}
 		
 		#minimum cycle delay before reset
-		elseif ([int]$global:cycle -gt 0 -And $global:sw2 -eq 1){
+		elseif ([int]$global:cycle -gt 0 -And`
+		$global:sw2 -eq 1){
 		
 			$global:cycle--
 		}
@@ -479,7 +483,8 @@ while ($True)
 	}
 	
 	#if its not init settings...
-	elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And $global:sw1 -eq 0){
+	elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And`
+	$global:sw1 -eq 0){
 		#disable short boost triggers
 		if($global:sw2 -eq 1){
 			#print information<<<<<<
