@@ -155,7 +155,7 @@ function checkFiles_myfiles{
 }
 
 $loop_delay = 5				#seconds
-$boost_cycle_delay = 36		#minimum cycle delay before reset:
+$boost_cycle_delay = 300	#minimum cycle delay before reset:
 							#	boost_cycle_delay * loop_delay = minimum seconds before reset
 							#
 							#	longer delay => less throttling
@@ -302,11 +302,11 @@ function checkMaxSpeed(){
 
 checkMaxSpeed
 
-# switch
+# throttle switch
 $global:sw1 = 0
-$global:sw2 = 0
 
 # minimum cycle delay before reset
+$global:sw2 = 0
 $global:cycle = 0
 
 while ($True)
@@ -480,6 +480,14 @@ while ($True)
 	
 	#if its not init settings...
 	elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And $global:sw1 -eq 0){
+		#disable short boost triggers
+		if($global:sw2 -eq 1){
+			#print information<<<<<<
+			msg("wait interrupted.")
+			$global:sw2 = 0
+			$global:cycle = 0
+		}
+		
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("current powersettings followed by: " + $key + ", setcpuspeed: "`
 		+ $programs_running_cfg_cpu[$special_programs[$key]] + ", setxtuspeed: "`
