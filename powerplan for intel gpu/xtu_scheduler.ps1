@@ -132,6 +132,7 @@ function checkFiles_myfiles{
 'dolphin' = 2
 'vmware-vmx' = 2
 'dosbox' = 2
+'cemu' = 2
 'drt' = 3
 'dirtrally2' = 3
 'tombraider' = 3
@@ -309,6 +310,9 @@ $global:sw1 = 0
 $global:sw2 = 0
 $global:cycle = 0
 
+# *legit* special_programs switch
+$global:sw3 = 0
+
 while ($True)
 {
 	checkFiles_myfiles
@@ -429,7 +433,8 @@ while ($True)
 		# upper bound is 80
 		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
 		[int]$clock -eq [int]$global:max -And`		#one more check to ensure when to boost
-		$global:sw2 -eq 0){
+		$global:sw2 -eq 0 -And`
+		$global:sw3 -eq 0){		# *legit* special_programs lock
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			msg("setting graphics to max perf, possibly a light game...?")
 			
@@ -467,6 +472,8 @@ while ($True)
 			{
 				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 				msg("fakeinit: no known applications running atm... back to init")
+				
+				$global:sw3 = 0		# *legit* special_programs not running
 			}
 			else{
 				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -501,6 +508,8 @@ while ($True)
 		cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 
+		$global:sw3 = 1		# *legit* special_programs running
+		
 		$loop_delay = $loop_delay_backup
 		checkMaxSpeed		# check max speed here
 	}
