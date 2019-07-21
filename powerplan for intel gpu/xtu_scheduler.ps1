@@ -416,9 +416,11 @@ while ($True)
 	$global:sw1 -eq 0){
 
 		# keep shifting to another profile
-		$th_offset_temp = (++$global:th_offset) % $programs_running_cfg_cpu.Count
-		cpuproc $programs_running_cfg_cpu[[string]([int]$special_programs[$key] + [int]$th_offset_temp)] 2
-		xtuproc $programs_running_cfg_xtu[[string]([int]$special_programs[$key] + [int]$th_offset_temp)]
+		$th_offset_temp = [int]([int]$special_programs[$key] + [int](++$global:th_offset))
+		$th_offset_temp = $th_offset_temp % $programs_running_cfg_cpu.Count
+		
+		cpuproc $programs_running_cfg_cpu[[string]$th_offset_temp] 2
+		xtuproc $programs_running_cfg_xtu[[string]$th_offset_temp]
 		
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max`
