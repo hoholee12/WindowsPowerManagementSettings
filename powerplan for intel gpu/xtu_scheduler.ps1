@@ -407,13 +407,14 @@ while ($True)
 	[int]$clock -lt [int]$global:max -And`		#2700mhz != 2701mhz, might be a turboboost clock
 	$global:sw1 -eq 0){
 
-		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
-	
 		# keep shifting to another profile
 		$th_offset_temp = (++$global:th_offset) % $programs_running_cfg_cpu.Count
 		cpuproc $programs_running_cfg_cpu[[string]([int]$special_programs[$key] + [int]$th_offset_temp)] 2
 		xtuproc $programs_running_cfg_xtu[[string]([int]$special_programs[$key] + [int]$th_offset_temp)]
+		
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max`
+		+ ", profile switch to: " + $th_offset_temp)
 		
 		$global:sw1 = 1
 	}
@@ -432,11 +433,12 @@ while ($True)
 		
 		#if throttling commenced in init settings...
 		if($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True){
-			cpuproc $programs_running_cfg_xtu[$special_programs[$key]] 1
+			cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 1
 		}
 		else{
-			cpuproc $programs_running_cfg_xtu[$special_programs[$key]] 2
+			cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
 		}
+		
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 		
 		$global:sw1 = 0
