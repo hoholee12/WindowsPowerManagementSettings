@@ -401,6 +401,14 @@ while ($True)
 	$load = $cpu['LoadPercentage']
 	$clock = $cpu['CurrentClockSpeed']
 	
+	# reset offset after throttling stopped
+	if($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+	[int]$clock -eq [int]$global:max -And`
+	$global:th_offset -ne 0){	
+		#print information<<<<<<<<<
+		msg("throttling is clear.")
+		$global:th_offset = 0
+	}
 	
 	#if throttling has kicked in, shift to another profile for a brief time
 	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
@@ -423,14 +431,6 @@ while ($True)
 	# no need to check cpuload here
 	elseif ($global:sw1 -eq 1){
 	
-		# reset offset after throttling stopped
-		if($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
-		[int]$clock -eq [int]$global:max){	
-			#print information<<<<<<<<<
-			msg("throttling is clear.")
-			$global:th_offset = 0
-		}
-		
 		#if throttling commenced in init settings...
 		if($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True){
 			cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 1
