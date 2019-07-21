@@ -412,8 +412,8 @@ while ($True)
 	
 		# keep shifting to another profile
 		$th_offset_temp = (++$global:th_offset) % $special_programs.Count
-		cpuproc $programs_running_cfg_cpu[($special_programs[$key] + $th_offset_temp)] 2
-		xtuproc $programs_running_cfg_xtu[($special_programs[$key] + $th_offset_temp)]
+		cpuproc $programs_running_cfg_cpu[[string]([int]$special_programs[$key] + [int]$th_offset_temp)] 2
+		xtuproc $programs_running_cfg_xtu[[string]([int]$special_programs[$key] + [int]$th_offset_temp)]
 		
 		$global:sw1 = 1
 	}
