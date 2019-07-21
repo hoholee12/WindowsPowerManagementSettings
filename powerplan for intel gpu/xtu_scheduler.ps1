@@ -128,6 +128,7 @@ function checkFiles_myfiles{
 'Project64' = 1
 'ace7game' = 1
 'pcars' = 1
+'doom' = 1
 'pcsx2' = 2
 'dolphin' = 2
 'vmware-vmx' = 2
@@ -305,6 +306,8 @@ checkMaxSpeed
 
 # throttle switch
 $global:sw1 = 0
+# throttle offset shift
+$global:th_offset = 0
 
 # minimum cycle delay before reset
 $global:sw2 = 0
@@ -399,7 +402,7 @@ while ($True)
 	$clock = $cpu['CurrentClockSpeed']
 	
 	
-	#if throttling has kicked in, boost gpu clockspeed for a brief time
+	#if throttling has kicked in, shift to another profile for a brief time
 	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
 	[int]$clock -lt [int]$global:max -And`		#2700mhz != 2701mhz, might be a turboboost clock
 	$global:sw1 -eq 0){
@@ -407,7 +410,10 @@ while ($True)
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max)
 	
-		xtuproc $xtu_max
+		# keep shifting to another profile
+		$th_offset_temp = (++$global:th_offset) % $special_programs.Count
+		cpuproc $programs_running_cfg_cpu[($special_programs[$key] + $th_offset_temp)] 2
+		xtuproc $programs_running_cfg_xtu[($special_programs[$key] + $th_offset_temp)]
 		
 		$global:sw1 = 1
 	}
@@ -416,6 +422,21 @@ while ($True)
 	# no need to check cpuload here
 	elseif ($global:sw1 -eq 1){
 	
+		# reset offset after throttling stopped
+		if($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+		[int]$clock -eq [int]$global:max){	
+			#print information<<<<<<<<<
+			msg("throttling is clear.")
+			$global:th_offset = 0
+		}
+		
+		#if throttling commenced in init settings...
+		if($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True){
+			cpuproc $programs_running_cfg_xtu[$special_programs[$key]] 1
+		}
+		else{
+			cpuproc $programs_running_cfg_xtu[$special_programs[$key]] 2
+		}
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 		
 		$global:sw1 = 0
