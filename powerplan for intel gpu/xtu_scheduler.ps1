@@ -180,7 +180,7 @@ function checkFiles_myfiles{
 }
 
 $loop_delay = 5				#seconds
-$boost_cycle_delay = 100	#minimum cycle delay before reset:
+$boost_cycle_delay = 6	#minimum cycle delay before reset:
 							#	boost_cycle_delay * loop_delay = minimum seconds before reset
 							#
 							#	longer delay => less throttling
@@ -336,6 +336,9 @@ $global:th_offset = 0
 # minimum cycle delay before reset
 $global:sw2 = 0
 $global:cycle = 0
+# wait on first detection
+$global:cycle2 = 0
+$global:cycle2_copy = 0
 
 # *legit* special_programs switch
 $global:sw3 = 0
@@ -434,6 +437,12 @@ while ($True)
 		$global:th_offset = 0
 	}
 	
+	#if no longer needed while waiting...
+	if($global:cycle2 -ne $global:cycle2_copy){
+		$global:cycle2 = 0
+		$global:cycle2_copy = $global:cycle2
+	}
+	
 	#if throttling has kicked in, shift to another profile for a brief time
 	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
 	[int]$clock -lt [int]$global:max -And`		#2700mhz != 2701mhz, might be a turboboost clock
@@ -475,7 +484,7 @@ while ($True)
 	#there may be multiple init entries with different priority settings.
 	elseif($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True -And`
 	$global:sw1 -eq 0){
-	
+		
 		#copied from throttling code
 		#
 		#might be unconfigured game. apply Maximum Performance on graphics settings for a brief time
@@ -484,14 +493,36 @@ while ($True)
 		[int]$clock -eq [int]$global:max -And`		#one more check to ensure when to boost
 		$global:sw2 -eq 0 -And`
 		$global:sw3 -eq 0){		# *legit* special_programs lock
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("setting graphics to max perf, possibly a light game...?")
+		
+			# wait on first detection
+			#first encounter, start waiting
+			if($global:cycle2 -eq 0){
+				$global:cycle2 = [int]$boost_cycle_delay + 1
+				#copy cycle2, minus 1 because of decrement after loop
+				$global:cycle2_copy = [int]$global:cycle2 - 1
+			}
 			
-			cpuproc $cpu_init 2
-			$global:sw2 = 1
-			$global:cycle = $boost_cycle_delay
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("wait " + ($global:cycle * $loop_delay) + "second(s)")
+			# 0 is off, 1 is final
+			elseif($global:cycle2 -eq 1){
+			
+				#reset
+				$global:cycle2 = 0
+				$global:cycle2_copy = $global:cycle2
+				
+				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+				msg("lightgme: setting graphics to max perf, possibly a light game...?")
+				
+				cpuproc $cpu_init 2
+				$global:sw2 = 1
+				$global:cycle = $boost_cycle_delay
+				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+				msg("lightgme: wait " + ($global:cycle * $loop_delay) + "second(s)")
+				
+			}
+			else{
+				#copy cycle2, minus 1 because of decrement after loop
+				$global:cycle2_copy = [int]$global:cycle2 - 1
+			}
 		}
 		
 		#minimum cycle delay before reset
@@ -542,11 +573,13 @@ while ($True)
 	elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And`
 	$global:sw1 -eq 0){
 		#disable short boost triggers
-		if($global:sw2 -eq 1){
+		if($global:sw2 -eq 1 -Or $global:cycle2 -ne 0){
 			#print information<<<<<<
-			msg("wait interrupted.")
+			msg("lightgme: wait interrupted.")
 			$global:sw2 = 0
 			$global:cycle = 0
+			$global:cycle2 = 0
+			$global:cycle2_copy = $global:cycle2
 		}
 		
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -561,6 +594,13 @@ while ($True)
 		
 		$loop_delay = $loop_delay_backup
 		checkMaxSpeed		# check max speed here
+	}
+	
+	# wait on first detection
+	#decrement after loop
+	if($global:cycle2 -ne 0){
+		$global:cycle2--
+	
 	}
 	
 	start-sleep $loop_delay
