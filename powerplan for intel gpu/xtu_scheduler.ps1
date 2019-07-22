@@ -13,7 +13,7 @@
 #read cpu clock.txt and ready up everything prior to configuring this script
 
 #config files for adding special_programs, programs_running_cfg_cpu, programs_running_cfg_xtu
-#				YOU CAN EDIT CONFIG REALTIME!!!: its in c:\xtu_scheduler_config\
+#				YOU CAN EDIT CONFIG REALTIME!!!: its in <settingslocation>\xtu_scheduler_config\
 
 
 
@@ -152,6 +152,7 @@ function checkFiles_myfiles{
 'ace7game' = 1
 'pcars' = 1
 'doom' = 1
+'gtaiv' = 1
 'pcsx2' = 2
 'dolphin' = 2
 'vmware-vmx' = 2
@@ -160,11 +161,10 @@ function checkFiles_myfiles{
 'drt' = 3
 'dirtrally2' = 3
 'tombraider' = 3
+'rottr' = 3
 'gta5' = 4
 'borderlands2' = 4
 'katamari' = 4
-'rottr' = 4
-'gtaiv' = 4
 'cl' = 5
 'link' = 5
 'ffmpeg' = 5
