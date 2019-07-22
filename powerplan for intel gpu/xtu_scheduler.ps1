@@ -1,8 +1,11 @@
 # adaptive power management script (for laptops with intel gpu) written by dj_manual
 
-# run it via task scheduler 
-#  PowerShell.exe -windowstyle hidden -executionpolicy remotesigned <scriptlocation>\xtu_scheduler.ps1
+# run it via task scheduler
+#  PowerShell.exe -windowstyle hidden -executionpolicy remotesigned <scriptlocation>\xtu_scheduler.ps1 <settingslocation>
+#  <location> is your location of choice, ex) "c:\my_awesome_location"
+#
 #  (Run whether user is logged on or not is VERY UNRELIABLE)
+
 
 #this script requires intel xtucli.exe!!!
 #read cpu clock.txt and ready up everything prior to configuring this script
@@ -10,7 +13,25 @@
 #config files for adding special_programs, programs_running_cfg_cpu, programs_running_cfg_xtu
 #				YOU CAN EDIT CONFIG REALTIME!!!: its in c:\xtu_scheduler_config\
 
+
+
 #	INITIALIZERS
+
+# check custom location for settings
+$loc = ".\"
+$arg_len = $args[0].Length
+if($arg_len -ne 0){
+	if($args[0][[int]$arg_len - 1] -ne "\"){
+		$loc = $args[0] + "\"
+	
+	}
+	else{
+		$loc = $args[0]
+	
+	}
+
+}
+
 # your program = index
 $global:special_programs = @{}
 
@@ -26,34 +47,34 @@ $global:programs_running_cfg_xtu = @{}
 $global:programs_running_cfg_nice = @{}
 
 #logging stuff
-if((Test-Path (".\xtu_scheduler_config\xtu_scheduler.log")) -eq $True){
-	remove-item .\xtu_scheduler_config\xtu_scheduler.log
+if((Test-Path ($loc + "xtu_scheduler_config\xtu_scheduler.log")) -eq $True){
+	remove-item ($loc + "xtu_scheduler_config\xtu_scheduler.log")
 }
 function msg ([string]$setting_string){
-	if((Test-Path ".\xtu_scheduler_config") -ne $True) {
-		New-Item -path ".\" -name "xtu_scheduler_config" -ItemType "directory"
+	if((Test-Path ($loc + "xtu_scheduler_config")) -ne $True) {
+		New-Item -path $loc -name "xtu_scheduler_config" -ItemType "directory"
 	}
 
 	#print by date and time
 	$setting_string = ((get-date -format "yy-MM-dd hh:mm:ss: ") + $setting_string)
 	$setting_string
-	$setting_string >> .\xtu_scheduler_config\xtu_scheduler.log
+	$setting_string >> ($loc + "xtu_scheduler_config\xtu_scheduler.log")
 }
 
 
 # create config files if not exist
 function checkFiles ([string]$setting_string, [string]$value_string){
-	if((Test-Path (".\xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
-		if((Test-Path ".\xtu_scheduler_config") -ne $True) {
-			New-Item -path ".\" -name "xtu_scheduler_config" -ItemType "directory"
+	if((Test-Path ($loc + "xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
+		if((Test-Path ($loc + "xtu_scheduler_config")) -ne $True) {
+			New-Item -path $loc -name "xtu_scheduler_config" -ItemType "directory"
 			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("created directory: .\xtu_scheduler_config")
+			msg("created directory: " + $loc + "xtu_scheduler_config")
 		}
 		
-		New-Item -path ".\xtu_scheduler_config" -name ($setting_string + ".txt"`
+		New-Item -path ($loc + "xtu_scheduler_config") -name ($setting_string + ".txt"`
 		) -ItemType "file" -value $value_string
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		msg("created file: " + $setting_string + " in .\xtu_scheduler_config")
+		msg("created file: " + $setting_string + " in " + $loc + "xtu_scheduler_config")
 	}
 }
 
@@ -201,8 +222,8 @@ $global:isDateDifferent = $False	#flag for findFiles
 
 # find settings file
 function findFiles ($setting_string){
-	$file = Get-Content (".\xtu_scheduler_config\" + $setting_string + ".txt")
-	$global:lastModifiedDate.add($setting_string, (Get-Item (".\xtu_scheduler_config\"`
+	$file = Get-Content ($loc + "xtu_scheduler_config\" + $setting_string + ".txt")
+	$global:lastModifiedDate.add($setting_string, (Get-Item ($loc + "xtu_scheduler_config\"`
 	+ $setting_string + ".txt")).LastWriteTime)
 	if ($? -eq $True)
 	{
@@ -218,7 +239,7 @@ function findFiles ($setting_string){
 }
 
 function checkSettings ($setting_string){
-	$currentModifiedDate = (Get-Item (".\xtu_scheduler_config\" + $setting_string + ".txt"`
+	$currentModifiedDate = (Get-Item ($loc + "xtu_scheduler_config\" + $setting_string + ".txt"`
 	)).LastWriteTime
 	if($global:lastModifiedDate[$setting_string] -ne $currentModifiedDate){
 		$global:isDateDifferent = $True
@@ -256,6 +277,7 @@ $xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -in
 
 #print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 msg(" **** xtu_scheduler initial information ****")
+msg("using settings file located in: " + $loc + "xtu_scheduler_config\")
 msg("special_programs count: " + $special_programs.Count)
 msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
 msg("cpu_init: " + $cpu_init + ", cpu_max: " + $cpu_max)
