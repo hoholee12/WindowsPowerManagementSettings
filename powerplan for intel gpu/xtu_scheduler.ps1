@@ -2,7 +2,9 @@
 
 # run it via task scheduler
 #  PowerShell.exe -windowstyle hidden -executionpolicy remotesigned <scriptlocation>\xtu_scheduler.ps1 <settingslocation>
-#  <location> is your location of choice, ex) "c:\my_awesome_location"
+#
+#  <scriptlocation>: where did you put this script?
+#  <settingslocation>: put it on your location of choice, ex) "c:\my_awesome_location"
 #
 #  (Run whether user is logged on or not is VERY UNRELIABLE)
 
