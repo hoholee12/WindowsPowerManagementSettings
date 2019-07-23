@@ -180,7 +180,7 @@ function checkFiles_myfiles{
 }
 
 $loop_delay = 5				#seconds
-$boost_cycle_delay = 6	#minimum cycle delay before reset:
+$boost_cycle_delay = 6		#minimum cycle delay before reset:
 							#	boost_cycle_delay * loop_delay = minimum seconds before reset
 							#
 							#	longer delay => less throttling
@@ -332,6 +332,8 @@ checkMaxSpeed
 $global:sw1 = 0
 # throttle offset shift
 $global:th_offset = 0
+# throttle cycle delay
+$global:th_cycle = 0
 
 # minimum cycle delay before reset
 $global:sw2 = 0
@@ -428,16 +430,11 @@ while ($True)
 	$load = $cpu['LoadPercentage']
 	$clock = $cpu['CurrentClockSpeed']
 	
-	# reset offset after throttling stopped
-	if($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
-	[int]$clock -eq [int]$global:max -And`
-	$global:th_offset -ne 0){	
-		#print information<<<<<<<<<
-		msg("throttling is clear.")
-		$global:th_offset = 0
-	}
 	
-	#if no longer needed while waiting...
+	
+	
+	
+	#if short boost no longer needed while waiting...
 	if($global:cycle2 -ne $global:cycle2_copy){
 		$global:cycle2 = 0
 		$global:cycle2_copy = $global:cycle2
@@ -445,8 +442,8 @@ while ($True)
 	
 	#if throttling has kicked in, shift to another profile for a brief time
 	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
-	[int]$clock -lt [int]$global:max -And`		#2700mhz != 2701mhz, might be a turboboost clock
-	$global:sw1 -eq 0){
+	[int]$global:th_cycle++ % [int]$boost_cycle_delay -eq 0 -And`	# delay every throttle
+	[int]$clock -lt [int]$global:max){		#2700mhz != 2701mhz, might be a turboboost clock
 
 		# keep shifting to another profile
 		$th_offset_temp = [int]([int]$special_programs[$key] + [int](++$global:th_offset))
@@ -460,14 +457,20 @@ while ($True)
 		+ ", profile switch to: " + $th_offset_temp)
 		
 		$global:sw1 = 1
+		checkMaxSpeed		# check max speed here
 	}
 	
-	#reset after boost
-	# no need to check cpuload here
-	elseif ($global:sw1 -eq 1){
-	
+	# reset offset after throttling stopped
+	elseif($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+	[int]$clock -ge [int]$global:max -And`
+	$global:sw1 -eq 1 -And`
+	$global:th_offset -ne 0){
+		#print information<<<<<<<<<
+		msg("throttling is clear.")
+		
 		#if throttling commenced in init settings...
-		if($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True){
+		if($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True -And`
+		$global:sw2 -eq 0){
 			cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 1
 		}
 		else{
@@ -476,6 +479,7 @@ while ($True)
 		
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 		
+		$global:th_offset = 0
 		$global:sw1 = 0
 		checkMaxSpeed		# check max speed here
 	}
@@ -489,7 +493,7 @@ while ($True)
 		#
 		#might be unconfigured game. apply Maximum Performance on graphics settings for a brief time
 		# upper bound is 80
-		if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+		if($load -gt $processor_power_management_guids['12a0ab44-fe28-4fa9-b3bd-4b64f44960a6'] -And`
 		[int]$clock -eq [int]$global:max -And`		#one more check to ensure when to boost
 		$global:sw2 -eq 0 -And`
 		$global:sw3 -eq 0){		# *legit* special_programs lock
@@ -573,7 +577,7 @@ while ($True)
 	elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And`
 	$global:sw1 -eq 0){
 		#disable short boost triggers
-		if($global:sw2 -eq 1 -Or $global:cycle2 -ne 0){
+		if($global:sw2 -eq 1){
 			#print information<<<<<<
 			msg("lightgme: wait interrupted.")
 			$global:sw2 = 0
