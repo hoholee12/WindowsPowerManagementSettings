@@ -288,7 +288,8 @@ if([float]$xtu_init -gt [float] $xtu_max){
 	msg("xtu settings may have been altered, check your gpu settings and restart this program.")
 	msg("xtu settings may not be applied properly, or at all.")
 }
-msg("loop_delay: " + $loop_delay)
+msg("loop_delay: " + $loop_delay + ", boost_cycle_delay: " + $boost_cycle_delay)
+msg("general pace: " + ([int]$boost_cycle_delay * [int]$loop_delay) + "second(s)")
 
 function xtuproc($arg0){
 	if ([float]$arg0 -le [float]$xtu_max)
