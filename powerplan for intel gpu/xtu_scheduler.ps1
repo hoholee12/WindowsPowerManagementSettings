@@ -332,7 +332,7 @@ checkMaxSpeed
 # throttle switch
 $global:sw1 = 0
 # throttle offset shift
-$global:th_offset = 0
+$global:th_offset = -1
 # throttle cycle delay
 $global:th_cycle = 0
 
@@ -432,9 +432,6 @@ while ($True)
 	$clock = $cpu['CurrentClockSpeed']
 	
 	
-	
-	
-	
 	#if short boost no longer needed while waiting...
 	if($global:cycle2 -ne $global:cycle2_copy){
 		$global:cycle2 = 0
@@ -447,15 +444,44 @@ while ($True)
 	[int]$clock -lt [int]$global:max){		#2700mhz != 2701mhz, might be a turboboost clock
 
 		# keep shifting to another profile
-		$th_offset_temp = [int]([int]$special_programs[$key] + [int](++$global:th_offset))
-		$th_offset_temp = $th_offset_temp % $programs_running_cfg_cpu.Count
+		#if init
+		if($global:th_offset -eq -1){
+			$global:th_offset = [int]$special_programs[$key]
+			$global:initmax = $global:max	#very first maxspeed
+			
+		}
+		#right
+		$th_offset_temp_r = [int]([int]$global:th_offset + [int]1)
+		if([int]$th_offset_temp_r -lt 0){		#if negative, add another count
+			$th_offset_temp_r = $th_offset_temp_r % $programs_running_cfg_cpu.Count + $programs_running_cfg_cpu.Count
+		}
+		else{
+			$th_offset_temp_r = $th_offset_temp_r % $programs_running_cfg_cpu.Count
+		}
+		#left
+		$th_offset_temp_l = [int]([int]$global:th_offset - [int]1)
+		if([int]$th_offset_temp_l -lt 0){		#if negative, add another count
+			$th_offset_temp_l = $th_offset_temp_l % $programs_running_cfg_cpu.Count + $programs_running_cfg_cpu.Count
+		}
+		else{
+			$th_offset_temp_l = $th_offset_temp_l % $programs_running_cfg_cpu.Count
+		}
 		
-		cpuproc $programs_running_cfg_cpu[[string]$th_offset_temp] 2
-		xtuproc $programs_running_cfg_xtu[[string]$th_offset_temp]
+		#check which sides bigger
+		if([int]$programs_running_cfg_cpu[[string]$th_offset_temp_l] -gt`
+		[int]$programs_running_cfg_cpu[[string]$th_offset_temp_r]){
+			$global:th_offset = $th_offset_temp_l
+		}
+		else{
+			$global:th_offset = $th_offset_temp_r
+		}
+		
+		cpuproc $programs_running_cfg_cpu[[string]$global:th_offset] 2
+		xtuproc $programs_running_cfg_xtu[[string]$global:th_offset]
 		
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg("throttling detected, cpuload: " + $load + ", currentspeed: " + $clock + ", maxspeed: " + $global:max`
-		+ ", profile switch to: " + $th_offset_temp)
+		+ ", profile switch to: " + $global:th_offset)
 		
 		$global:sw1 = 1
 		checkMaxSpeed		# check max speed here
@@ -463,9 +489,9 @@ while ($True)
 	
 	# reset offset after throttling stopped
 	elseif($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
-	[int]$clock -ge [int]$global:max -And`
+	[int]$clock -eq [int]$global:initmax -And`	#very first maxspeed
 	$global:sw1 -eq 1 -And`
-	$global:th_offset -ne 0){
+	$global:th_offset -ne -1){
 		#print information<<<<<<<<<
 		msg("throttling is clear.")
 		
@@ -480,7 +506,9 @@ while ($True)
 		
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 		
-		$global:th_offset = 0
+		$global:initmax = $null		#very first maxspeed
+		$global:th_offset = -1
+		$global:th_cycle = 0		#related to pace
 		$global:sw1 = 0
 		checkMaxSpeed		# check max speed here
 	}
