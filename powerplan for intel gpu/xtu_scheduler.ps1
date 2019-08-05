@@ -337,7 +337,7 @@ $global:th_offset = -1
 $global:th_cycle = 0
 
 # minimum cycle delay before reset
-$global:sw2 = 0
+$global:sw2 = 0		#0 = off, 1 = wait, 2 = countdown
 $global:cycle = 0
 # wait on first detection
 $global:cycle2 = 0
@@ -542,14 +542,11 @@ while ($True)
 				$global:cycle2 = 0
 				$global:cycle2_copy = $global:cycle2
 				
-				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 				msg("lightgme: setting graphics to max perf, possibly a light game...?")
 				
 				cpuproc $cpu_init 2
 				$global:sw2 = 1
-				$global:cycle = $boost_cycle_delay
-				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-				msg("lightgme: wait " + ($global:cycle * $loop_delay) + "second(s)")
 				
 			}
 			else{
@@ -558,24 +555,39 @@ while ($True)
 			}
 		}
 		
-		#minimum cycle delay before reset
-		elseif ([int]$global:cycle -gt 0 -And`
+		#if lowerbound while not yet count, start counting
+		elseif ($load -le $processor_power_management_guids['12a0ab44-fe28-4fa9-b3bd-4b64f44960a6'] -And`
 		$global:sw2 -eq 1){
+			$global:sw2 = 2
+			$global:cycle = $boost_cycle_delay
 		
-			$global:cycle--
+		}
+		#if upperbound while counting... restart counting
+		elseif ($load -gt $processor_power_management_guids['12a0ab44-fe28-4fa9-b3bd-4b64f44960a6'] -And`
+		$global:sw2 -eq 2){
+			$global:sw2 = 1
+			
 		}
 		
 		#reset after boost
 		# lower bound is 50
 		elseif ($load -le $processor_power_management_guids['12a0ab44-fe28-4fa9-b3bd-4b64f44960a6'] -And`
-		$global:sw2 -eq 1){
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			msg("lightgme: no known applications running atm... back to init")
-		
-			cpuproc $cpu_init 1
-			$global:sw2 = 0
-			checkMaxSpeed		# check max speed here
+		$global:sw2 -eq 2){
+			if($global:cycle -eq 0){
+				#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+				msg("lightgme: no known applications running atm... back to init")
+			
+				cpuproc $cpu_init 1
+				$global:sw2 = 0
+				checkMaxSpeed		# check max speed here
+			}
+			#start counting when lowerbound
+			else{
+				$global:cycle--
+			
+			}
 		}
+		
 		
 		elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And`
 			$global:sw2 -eq 0){		#if boost is waiting, this must not happen.
@@ -607,7 +619,7 @@ while ($True)
 	$global:sw1 -eq 0){
 		#disable short boost triggers
 		if($global:sw2 -eq 1){
-			#print information<<<<<<
+			#print information<<<<<<<<<<<<<<<<
 			msg("lightgme: wait interrupted.")
 			$global:sw2 = 0
 			$global:cycle = 0
