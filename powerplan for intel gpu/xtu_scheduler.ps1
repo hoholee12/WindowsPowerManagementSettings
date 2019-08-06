@@ -547,7 +547,7 @@ while ($True)
 				
 				cpuproc $cpu_init 2
 				$global:sw2 = 1
-				
+				checkMaxSpeed		# check max speed here
 			}
 			else{
 				#copy cycle2, minus 1 because of decrement after loop
