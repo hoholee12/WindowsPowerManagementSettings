@@ -438,6 +438,11 @@ while ($True)
 		$global:cycle2_copy = $global:cycle2
 	}
 	
+	#throttling counter starts only when throttling starts
+	if($global:sw1 -ne 1){
+		$global:th_cycle = 0
+	}
+	
 	#if throttling has kicked in, shift to another profile for a brief time
 	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
 	[int]$global:th_cycle++ % [int]$boost_cycle_delay -eq 0 -And`	# delay every throttle
@@ -447,7 +452,6 @@ while ($True)
 		#if init
 		if($global:th_offset -eq -1){
 			$global:th_offset = [int]$special_programs[$key]
-			$global:initmax = $global:max	#very first maxspeed
 			
 		}
 		#right
@@ -489,7 +493,7 @@ while ($True)
 	
 	# reset offset after throttling stopped
 	elseif($load -le $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
-	[int]$clock -eq [int]$global:initmax -And`	#very first maxspeed
+	[int]$clock -ge [int]$global:max -And`
 	$global:sw1 -eq 1 -And`
 	$global:th_offset -ne -1){
 		#print information<<<<<<<<<
@@ -506,7 +510,6 @@ while ($True)
 		
 		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
 		
-		$global:initmax = $null		#very first maxspeed
 		$global:th_offset = -1
 		$global:th_cycle = 0		#related to pace
 		$global:sw1 = 0
