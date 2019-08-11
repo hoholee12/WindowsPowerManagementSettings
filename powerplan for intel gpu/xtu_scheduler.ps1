@@ -19,6 +19,9 @@
 
 #	INITIALIZERS
 
+# for .NET messagebox
+Add-Type -AssemblyName PresentationCore, PresentationFramework
+
 # check custom location for settings
 $loc = ".\"
 $arg_len = $args[0].Length
@@ -63,6 +66,14 @@ function msg ([string]$setting_string){
 	$setting_string >> ($loc + "xtu_scheduler_config\xtu_scheduler.log")
 }
 
+# https://docs.microsoft.com/en-us/dotnet/api/system.windows.messagebox?redirectedfrom=MSDN&view=netframework-4.8
+function msgbox ([string]$setting_string){
+	msg($setting_string)
+	$MessageIcon = [System.Windows.MessageBoxImage]::Warning
+	$ButtonType = [System.Windows.MessageBoxButton]::OK
+	[System.Windows.MessageBox]::Show($setting_string, "XTU scheduler", $ButtonType, $MessageIcon)
+
+}
 
 # create config files if not exist
 function checkFiles ([string]$setting_string, [string]$value_string){
@@ -265,6 +276,12 @@ findFiles "programs_running_cfg_xtu"
 findFiles "programs_running_cfg_nice"
 findFiles "special_programs"
 
+#initial xtu check
+if((get-command xtucli -errorAction SilentlyContinue) -eq $null){
+	#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	msgbox("XTUCLI CMDLET DOES NOT EXIST!! this program will not operate without Intel(r) Extreme Tuning Utility.")
+	exit
+}
 
 # initial cpu setting
 $cpu_init = $programs_running_cfg_cpu['0']
@@ -277,7 +294,7 @@ $xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -in
 ) -replace "x",'').trim()
 
 
-#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 msg(" **** xtu_scheduler initial information ****")
 msg("using settings file located in: " + $loc + "xtu_scheduler_config\")
 msg("special_programs count: " + $special_programs.Count)
@@ -285,7 +302,7 @@ msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
 msg("cpu_init: " + $cpu_init + ", cpu_max: " + $cpu_max)
 msg("xtu_init: " + $xtu_init + ", xtu_max: " + $xtu_max)
 if([float]$xtu_init -gt [float] $xtu_max){
-	msg("xtu settings may have been altered, check your gpu settings and restart this program.")
+	msgbox("xtu settings may have been altered too low, check your gpu settings and restart this program.")
 	msg("xtu settings may not be applied properly, or at all.")
 }
 msg("loop_delay: " + $loop_delay + ", boost_cycle_delay: " + $boost_cycle_delay)
@@ -360,8 +377,8 @@ while ($True)
 	
 	#check if theres enough profile
 	if($special_programs.Count -le 2){
-		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		msg("not enough profiles on 'special_programs'. at least 3 is required")
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		msgbox("not enough profiles on 'special_programs'. at least 3 is required")
 		start-sleep $loop_delay
 		continue
 	}
