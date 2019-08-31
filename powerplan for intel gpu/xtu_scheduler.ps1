@@ -169,13 +169,18 @@ function checkFiles_myfiles{
 'vmware-vmx' = 2
 'dosbox' = 2
 'cemu' = 2
+'citra' = 2
+'rpcs3' = 2
 'drt' = 3
 'dirtrally2' = 3
 'tombraider' = 3
 'rottr' = 3
+'bf' = 4
 'gta5' = 4
 'borderlands2' = 4
 'katamari' = 4
+'bold' = 4
+'minecraft' = 5
 'cl' = 5
 'link' = 5
 'ffmpeg' = 5
@@ -318,7 +323,8 @@ function xtuproc($arg0){
 
 function cpuproc($arg0, $arg1){
 	powercfg /setdcvalueindex $guid0 $guid1 $guid2 $arg0
-	powercfg /setacvalueindex $guid0 $guid1 $guid2 $arg0
+	powercfg /setacvalueindex $guid0 $guid1 $guid2 ($arg0 - 1)		# hotter when plugged in
+	$arg0 - 1
 	#intel graphics settings
 	#	1 = Balanced
 	#	2 = Maximum Performance
