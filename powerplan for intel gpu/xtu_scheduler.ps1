@@ -51,6 +51,17 @@ $global:programs_running_cfg_xtu = @{}
 # nice settings
 $global:programs_running_cfg_nice = @{}
 
+$global:loop_delay = @{}		#seconds
+$global:boost_cycle_delay = @{}	#minimum cycle delay before reset:
+								#	boost_cycle_delay * loop_delay = minimum seconds before reset
+								#
+								#	longer delay => less throttling
+								#	shorter delay => more battery life
+
+$global:ac_offset = @{}			#ac + ac_offset = dc
+								# lowers clockspeed to compensate charging heat
+
+
 #logging stuff
 if((Test-Path ($loc + "xtu_scheduler_config\xtu_scheduler.log")) -eq $True){
 	remove-item ($loc + "xtu_scheduler_config\xtu_scheduler.log")
@@ -80,7 +91,7 @@ function checkFiles ([string]$setting_string, [string]$value_string){
 	if((Test-Path ($loc + "xtu_scheduler_config\" + $setting_string + ".txt")) -ne $True){
 		if((Test-Path ($loc + "xtu_scheduler_config")) -ne $True) {
 			New-Item -path $loc -name "xtu_scheduler_config" -ItemType "directory"
-			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			msg("created directory: " + $loc + "xtu_scheduler_config")
 		}
 		
@@ -193,14 +204,12 @@ function checkFiles_myfiles{
 'obs' = 6
 'remoteplay' = 6
 'discord' = 6"
-}
 
-$loop_delay = 5				#seconds
-$boost_cycle_delay = 6		#minimum cycle delay before reset:
-							#	boost_cycle_delay * loop_delay = minimum seconds before reset
-							#
-							#	longer delay => less throttling
-							#	shorter delay => more battery life
+	checkFiles "loop_delay" "loop_delay = 5"
+	checkFiles "boost_cycle_delay" "boost_cycle_delay = 6"
+	checkFiles "ac_offset" "ac_offset = 1"
+	
+}
 
 #Config Area Here^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -228,9 +237,6 @@ powercfg /attributes $guid4 $guid5 -ATTRIB_HIDE
 # apply settings
 powercfg /setactive $guid0
 
-
-$loop_delay_backup = $loop_delay
-
 checkFiles_myfiles
 
 # used for checking whether settings file was modified
@@ -256,6 +262,15 @@ function findFiles ($setting_string){
 	}
 }
 
+function printSettings (){
+	#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	msg("special_programs count: " + $special_programs.Count)
+	msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
+	msg("loop_delay: " + $loop_delay.loop_delay + ", boost_cycle_delay: " + $boost_cycle_delay.boost_cycle_delay)
+	msg("general pace: " + ([int]$boost_cycle_delay.boost_cycle_delay * [int]$loop_delay.loop_delay) + "second(s)")
+
+}
+
 function checkSettings ($setting_string){
 	$currentModifiedDate = (Get-Item ($loc + "xtu_scheduler_config\" + $setting_string + ".txt"`
 	)).LastWriteTime
@@ -267,9 +282,8 @@ function checkSettings ($setting_string){
 		msg($setting_string + " has been modified, reloading...")
 		
 		findFiles $setting_string
-		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		msg("special_programs count: " + $special_programs.Count)
-		msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
+		
+		printSettings
 	}
 	else{
 		$global:isDateDifferent = $False
@@ -280,6 +294,9 @@ findFiles "programs_running_cfg_cpu"
 findFiles "programs_running_cfg_xtu"
 findFiles "programs_running_cfg_nice"
 findFiles "special_programs"
+findFiles "loop_delay"
+findFiles "boost_cycle_delay"
+findFiles "ac_offset"
 
 #initial xtu check
 if((get-command xtucli -errorAction SilentlyContinue) -eq $null){
@@ -299,19 +316,17 @@ $xtu_max = ((& xtucli -t -id 59 | select-string "59" | %{ -split $_ | select -in
 ) -replace "x",'').trim()
 
 
-#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 msg(" **** xtu_scheduler initial information ****")
 msg("using settings file located in: " + $loc + "xtu_scheduler_config\")
-msg("special_programs count: " + $special_programs.Count)
-msg("programs_running_cfg count: " + $programs_running_cfg_cpu.Count)
 msg("cpu_init: " + $cpu_init + ", cpu_max: " + $cpu_max)
 msg("xtu_init: " + $xtu_init + ", xtu_max: " + $xtu_max)
 if([float]$xtu_init -gt [float] $xtu_max){
 	msgbox("xtu settings may have been altered too low, check your gpu settings and restart this program.")
 	msg("xtu settings may not be applied properly, or at all.")
 }
-msg("loop_delay: " + $loop_delay + ", boost_cycle_delay: " + $boost_cycle_delay)
-msg("general pace: " + ([int]$boost_cycle_delay * [int]$loop_delay) + "second(s)")
+printSettings
+
 
 function xtuproc($arg0){
 	if ([float]$arg0 -le [float]$xtu_max)
@@ -323,8 +338,8 @@ function xtuproc($arg0){
 
 function cpuproc($arg0, $arg1){
 	powercfg /setdcvalueindex $guid0 $guid1 $guid2 $arg0
-	powercfg /setacvalueindex $guid0 $guid1 $guid2 ($arg0 - 1)		# hotter when plugged in
-	$arg0 - 1
+	powercfg /setacvalueindex $guid0 $guid1 $guid2 ($arg0 - $ac_offset.ac_offset)		# hotter when plugged in
+	
 	#intel graphics settings
 	#	1 = Balanced
 	#	2 = Maximum Performance
@@ -369,6 +384,9 @@ $global:cycle2_copy = 0
 # *legit* special_programs switch
 $global:sw3 = 0
 
+# loop delay backup
+$loop_delay_backup = $loop_delay.loop_delay
+
 while ($True)
 {
 	checkFiles_myfiles
@@ -376,6 +394,9 @@ while ($True)
 	checkSettings "programs_running_cfg_xtu"
 	checkSettings "programs_running_cfg_nice"
 	checkSettings "special_programs"
+	checkSettings "loop_delay"
+	checkSettings "boost_cycle_delay"
+	checkSettings "ac_offset"
 	#	init may have been changed
 	$cpu_init = $programs_running_cfg_cpu['0']
 	$xtu_init = $programs_running_cfg_xtu['0']
@@ -385,7 +406,7 @@ while ($True)
 	if($special_programs.Count -le 2){
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msgbox("not enough profiles on 'special_programs'. at least 3 is required")
-		start-sleep $loop_delay
+		start-sleep $loop_delay.loop_delay
 		continue
 	}
 	
@@ -468,9 +489,9 @@ while ($True)
 	
 	#if throttling has kicked in, shift to another profile for a brief time
 	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
-	[int]$global:th_cycle++ % [int]$boost_cycle_delay -eq 0 -And`	# delay every throttle
+	[int]$global:th_cycle++ % [int]$boost_cycle_delay.boost_cycle_delay -eq 0 -And`	# delay every throttle
 	[int]$clock -lt [int]$global:max){		#2700mhz != 2701mhz, might be a turboboost clock
-
+	
 		# keep shifting to another profile
 		#if init
 		if($global:th_offset -eq -1){
@@ -519,6 +540,7 @@ while ($True)
 	[int]$clock -ge [int]$global:max -And`
 	$global:sw1 -eq 1 -And`
 	$global:th_offset -ne -1){
+	
 		#print information<<<<<<<<<
 		msg("throttling is clear.")
 		
@@ -543,7 +565,7 @@ while ($True)
 	#there may be multiple init entries with different priority settings.
 	elseif($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True -And`
 	$global:sw1 -eq 0){
-		
+	
 		#copied from throttling code
 		#
 		#might be unconfigured game. apply Maximum Performance on graphics settings for a brief time
@@ -556,7 +578,7 @@ while ($True)
 			# wait on first detection
 			#first encounter, start waiting
 			if($global:cycle2 -eq 0){
-				$global:cycle2 = [int]$boost_cycle_delay + 1
+				$global:cycle2 = [int]$boost_cycle_delay.boost_cycle_delay + 1
 				#copy cycle2, minus 1 because of decrement after loop
 				$global:cycle2_copy = [int]$global:cycle2 - 1
 			}
@@ -585,7 +607,7 @@ while ($True)
 		elseif ($load -le $processor_power_management_guids['12a0ab44-fe28-4fa9-b3bd-4b64f44960a6'] -And`
 		$global:sw2 -eq 1){
 			$global:sw2 = 2
-			$global:cycle = $boost_cycle_delay
+			$global:cycle = $boost_cycle_delay.boost_cycle_delay
 		
 		}
 		#if upperbound while counting... restart counting
@@ -634,7 +656,7 @@ while ($True)
 			cpuproc $cpu_init 1
 			xtuproc $xtu_init
 			
-			$loop_delay = $loop_delay_backup
+			$loop_delay.loop_delay = $loop_delay_backup
 			checkMaxSpeed		# check max speed here
 		}
 	
@@ -643,6 +665,7 @@ while ($True)
 	#if its not init settings...
 	elseif ($temp2 -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $False -And`
 	$global:sw1 -eq 0){
+	
 		#disable short boost triggers
 		if($global:sw2 -eq 1){
 			#print information<<<<<<<<<<<<<<<<
@@ -663,7 +686,7 @@ while ($True)
 
 		$global:sw3 = 1		# *legit* special_programs running
 		
-		$loop_delay = $loop_delay_backup
+		$loop_delay.loop_delay = $loop_delay_backup
 		checkMaxSpeed		# check max speed here
 	}
 	
@@ -674,5 +697,5 @@ while ($True)
 	
 	}
 	
-	start-sleep $loop_delay
+	start-sleep $loop_delay.loop_delay
 }
