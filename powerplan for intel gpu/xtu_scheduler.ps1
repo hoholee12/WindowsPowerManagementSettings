@@ -607,7 +607,7 @@ while ($True)
 		elseif ($load -le $processor_power_management_guids['12a0ab44-fe28-4fa9-b3bd-4b64f44960a6'] -And`
 		$global:sw2 -eq 1){
 			$global:sw2 = 2
-			$global:cycle = $boost_cycle_delay.boost_cycle_delay
+			$global:cycle = [int]$boost_cycle_delay.boost_cycle_delay
 		
 		}
 		#if upperbound while counting... restart counting
