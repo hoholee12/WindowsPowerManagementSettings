@@ -130,7 +130,8 @@ function checkFiles_myfiles{
 3 = 65
 4 = 95
 5 = 100
-6 = 65"
+6 = 65
+7 = 100"
 
 	checkFiles "programs_running_cfg_xtu"`
 "0 = 7.5
@@ -139,7 +140,8 @@ function checkFiles_myfiles{
 3 = 7.5
 4 = 6.5
 5 = 4.5
-6 = 7.5"
+6 = 7.5
+7 = 7.5"
 
 	# adjust priority
 	# idle, belownormal, normal, abovenormal, high, realtime
@@ -150,7 +152,8 @@ function checkFiles_myfiles{
 3 = high
 4 = high
 5 = idle
-6 = realtime"
+6 = realtime
+7 = high"
 
 	checkFiles "special_programs"`
 "'jdownloader2' = 0
@@ -163,7 +166,7 @@ function checkFiles_myfiles{
 'subprocess' = 0
 'gtavlauncher' = 0
 'acad' = 1
-'launcher' = 1
+'launcher' = 7
 'tesv' = 1
 'fsx' = 1
 'Journey' = 1
@@ -175,13 +178,16 @@ function checkFiles_myfiles{
 'pcars' = 1
 'doom' = 1
 'gtaiv' = 1
+'nfs' = 1
+'dirt' = 1
+'grid' = 1
 'pcsx2' = 2
 'dolphin' = 2
 'vmware-vmx' = 2
 'dosbox' = 2
 'cemu' = 2
 'citra' = 2
-'rpcs3' = 2
+'rpcs3' = 7
 'drt' = 3
 'dirtrally2' = 3
 'tombraider' = 3
@@ -191,6 +197,7 @@ function checkFiles_myfiles{
 'borderlands2' = 4
 'katamari' = 4
 'bold' = 4
+'setup' = 5
 'minecraft' = 5
 'cl' = 5
 'link' = 5
@@ -198,6 +205,7 @@ function checkFiles_myfiles{
 '7z' = 5
 'bandizip' = 5
 'handbrake' = 5
+'mpc' = 5
 'macsfancontrol' = 6
 'lubbosfancontrol' = 6
 'bootcamp' = 6
@@ -243,6 +251,7 @@ checkFiles_myfiles
 $global:lastModifiedDate = @{}
 $global:found_hash = @{}		#copy $found_hash after calling findFiles
 $global:isDateDifferent = $False	#flag for findFiles
+$global:reapplySettings = $False	#flag for reapplySettings
 
 # find settings file
 function findFiles ($setting_string){
@@ -280,7 +289,7 @@ function checkSettings ($setting_string){
 		
 		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		msg($setting_string + " has been modified, reloading...")
-		
+		$global:reapplySettings = $True
 		findFiles $setting_string
 		
 		printSettings
@@ -487,8 +496,25 @@ while ($True)
 		$global:th_cycle = 0
 	}
 	
+	#reapplySettings: always reapply when settings changed
+	if($global:reapplySettings -eq $True){
+		#if throttling commenced in init settings...
+		if($cpu_init -match $programs_running_cfg_cpu[$special_programs[$key]] -eq $True -And`
+		$global:sw2 -eq 0){
+			cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 1
+		}
+		else{
+			cpuproc $programs_running_cfg_cpu[$special_programs[$key]] 2
+		}
+		xtuproc $programs_running_cfg_xtu[$special_programs[$key]]
+		#print information<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		msg("settings reapplied - cpu_init: " + $programs_running_cfg_cpu[$special_programs[$key]] + ", xtu_init: "`
+		+ $programs_running_cfg_xtu[$special_programs[$key]])
+		$global:reapplySettings = $False
+	}
+	
 	#if throttling has kicked in, shift to another profile for a brief time
-	if($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
+	elseif($load -gt $processor_power_management_guids['06cadf0e-64ed-448a-8927-ce7bf90eb35d'] -And`
 	[int]$global:th_cycle++ % [int]$boost_cycle_delay.boost_cycle_delay -eq 0 -And`	# delay every throttle
 	[int]$clock -lt [int]$global:max){		#2700mhz != 2701mhz, might be a turboboost clock
 	
