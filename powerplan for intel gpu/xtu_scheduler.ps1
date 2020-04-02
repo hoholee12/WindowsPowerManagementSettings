@@ -106,9 +106,9 @@ function checkFiles ([string]$setting_string, [string]$value_string){
 #reference inside config area below vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 $processor_power_management_guids = @{
-"06cadf0e-64ed-448a-8927-ce7bf90eb35d" = 67			# processor high threshold; lower this for performance
+"06cadf0e-64ed-448a-8927-ce7bf90eb35d" = 30			# processor high threshold; lower this for performance
 "0cc5b647-c1df-4637-891a-dec35c318583" = 100
-"12a0ab44-fe28-4fa9-b3bd-4b64f44960a6" = 33			# processor low threshold; upper this for batterylife
+"12a0ab44-fe28-4fa9-b3bd-4b64f44960a6" = 15			# processor low threshold; upper this for batterylife
 "40fbefc7-2e9d-4d25-a185-0cfd8574bac6" = 1
 "45bcc044-d885-43e2-8605-ee0ec6e96b59" = 100
 "465e1f50-b610-473a-ab58-00d1077dc418" = 2
@@ -181,6 +181,7 @@ function checkFiles_myfiles{
 'nfs' = 1
 'dirt' = 1
 'grid' = 1
+'studio64' = 2
 'arcade64' = 2
 'djmax' = 2
 'streaming_client' = 2
