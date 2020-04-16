@@ -6,9 +6,7 @@ while($true){
 	$ohm.cpuenabled = $true
 	$ohm.open()
 
-	$ohm.hardware
-	$ohm.hardware.sensors
-	$ohm.hardware.sensors.sensortype
+	#$ohm.hardware.sensors.sensortype
 	$ohm.hardware.sensors.value
 	
 	start-sleep 5
